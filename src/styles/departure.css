@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Cancelled employees and the departure record.
+
+   Reuses the employee form's part pills, grids and fields (employee-form.css);
+   this file adds only what the departure form needs on top. Every colour is an
+   existing token, so both themes follow automatically.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════ STATUS DOTS ══════════ */
+
+.dot--neutral { background: var(--dot-neutral); }
+.dot--muted   { background: transparent; box-shadow: inset 0 0 0 1.5px var(--dot-neutral); }
+
+/* ══════════ LIST ══════════ */
+
+.cell-link { color: inherit; text-decoration: none; }
+.cell-link:hover b { color: var(--o); }
+.cell-link:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 4px; }
+.cell-muted { color: var(--ink-3); }
+
+.hirs-table tbody tr[data-voided='true'] td { color: var(--ink-3); }
+.hirs-table tbody tr[data-voided='true'] .chip { opacity: .55; }
+
+.approval-ticks { display: inline-flex; gap: 6px; }
+.approval-tick {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px 0 6px; border-radius: var(--r-pill);
+  border: 1px dashed var(--line-strong); color: var(--ink-3);
+  font: 500 10.5px var(--font-inter); letter-spacing: .06em;
+}
+.approval-tick[data-done='true'] {
+  border: 1px solid transparent; background: var(--tint); color: var(--good);
+}
+.approval-tick svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+/* ══════════ STAGE BANNER ══════════ */
+
+.dp-banner {
+  display: flex; align-items: flex-start; gap: 22px;
+  padding: 16px 22px; margin-bottom: 16px;
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--dot-neutral);
+  border-radius: var(--r-4xl); box-shadow: var(--sh-card);
+}
+.dp-banner[data-stage='AWAITING_DEPARTURE'],
+.dp-banner[data-stage='AWAITING_APPROVAL'] { border-left-color: var(--dot-warn); }
+.dp-banner[data-stage='COMPLETED'] { border-left-color: var(--dot-good); }
+.dp-banner-stage { display: grid; gap: 6px; flex: none; min-width: 170px; }
+.dp-banner-label {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.dp-banner-stage .status { font-weight: 500; }
+.dp-banner-text { display: grid; gap: 6px; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.dp-warn { display: flex; align-items: center; gap: 7px; color: var(--warn); font-size: 13px; }
+.dp-warn svg { flex: none; }
+.dp-warn-inline { color: var(--warn); }
+
+/* ══════════ PANELS ══════════ */
+
+.ef-phead .dp-recorded {
+  margin-left: auto; text-align: right;
+  font-size: 12.5px; color: var(--ink-3); line-height: 1.4;
+}
+.dp-recorded b { color: var(--ink-2); font-weight: 500; }
+
+/* Read-only employee details — rows, not disabled inputs. */
+.dp-ro {
+  display: grid; grid-template-columns: 1fr 1fr; margin: 0;
+  border: 1px solid var(--line); border-radius: var(--r-4xl); overflow: hidden;
+}
+.dp-ro-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+}
+.dp-ro-row:nth-child(odd) { border-right: 1px solid var(--line); }
+.dp-ro-row:nth-last-child(-n + 2) { border-bottom: 0; }
+.dp-ro dt {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.dp-ro dd { margin: 0; font-size: 13.5px; color: var(--ink); text-align: right; }
+.dp-ro dd.mono { font: 500 13px var(--font-mono); }
+.dp-note { margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+
+.dp-fieldset { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.dp-fieldset:disabled .ef-shell input,
+.dp-fieldset:disabled .ef-shell select,
+.dp-fieldset:disabled .ef-shell textarea { background: var(--surface-2); color: var(--ink-2); cursor: default; }
+.dp-fieldset:disabled .ef-seg label { cursor: default; }
+.dp-fieldset:disabled .ef-seg label:not(:has(input:checked)) { opacity: .6; }
+
+.dp-lock {
+  padding: 14px 16px; border-radius: var(--r-2xl);
+  background: var(--surface-2); border: 1px dashed var(--line-strong);
+  font-size: 13.5px; color: var(--ink-3); line-height: 1.55;
+}
+
+/* The driver's acknowledgement — a legal statement, reproduced verbatim. */
+.dp-ack {
+  margin: 0 0 22px; padding: 14px 18px;
+  border-left: 3px solid var(--o-line); background: var(--surface-2);
+  border-radius: 0 var(--r-2xl) var(--r-2xl) 0;
+  font-size: 13.5px; line-height: 1.6; color: var(--ink-2);
+}
+
+.dp-gap-top { margin-top: 20px; }
+
+.dp-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; border-top: 1px solid var(--line); background: var(--surface-2);
+}
+.dp-foot .status { font-size: 13px; color: var(--ink-3); }
+.dp-foot-note { font-size: 13px; color: var(--ink-3); }
+.dp-foot .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ══════════ APPROVALS ══════════ */
+
+.dp-approvals { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dp-approval {
+  display: grid; gap: 10px; align-content: start; justify-items: start;
+  padding: 18px; min-height: 120px;
+  border: 1px dashed var(--line-strong); border-radius: var(--r-4xl);
+}
+.dp-approval[data-done='true'] { border: 1px solid var(--o-line); background: var(--tint); }
+.dp-approval h3 {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.dp-approval-by {
+  display: flex; align-items: center; gap: 8px;
+  font: 600 15px var(--font-sora); color: var(--ink);
+}
+.dp-approval-by svg { stroke: var(--good); stroke-width: 2.2; }
+.dp-approval-at { font: 500 12.5px var(--font-mono); color: var(--ink-3); }
+.dp-approval-reason { font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+.dp-approval .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ══════════ CONFIRM DIALOG ══════════ */
+
+.confirm-dialog {
+  width: min(460px, calc(100vw - 32px)); padding: 0; margin: auto;
+  border: 1px solid var(--line); border-radius: var(--r-5xl);
+  background: var(--card); color: var(--ink); box-shadow: var(--sh-card);
+}
+.confirm-dialog::backdrop { background: rgba(13, 13, 16, .45); backdrop-filter: blur(3px); }
+.confirm-dialog-body { padding: 24px; display: grid; gap: 14px; }
+.confirm-dialog h2 { font: 600 18px var(--font-sora); letter-spacing: -.02em; }
+.confirm-dialog-text { display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+.confirm-dialog .btn-primary[data-tone='danger'] { background: var(--bad); }
+.confirm-dialog button:disabled { opacity: .6; cursor: not-allowed; }
+
+@media (max-width: 860px) {
+  .dp-banner { flex-direction: column; gap: 10px; }
+  .dp-ro { grid-template-columns: 1fr; }
+  .dp-ro-row:nth-child(odd) { border-right: 0; }
+  .dp-ro-row:nth-last-child(2) { border-bottom: 1px solid var(--line); }
+  .dp-approvals { grid-template-columns: 1fr; }
+  .ef-phead { flex-wrap: wrap; }
+  .ef-phead .dp-recorded { margin-left: 0; text-align: left; }
+}

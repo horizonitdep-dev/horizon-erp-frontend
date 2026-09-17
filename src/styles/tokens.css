@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HIRS design tokens — DESIGN.md §4, transcribed verbatim.
+   Values marked DERIVED had no counterpart in the mockups; they are the only
+   ones open to revision. Never inline a raw hex in a component (DESIGN.md §1).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ---- ink ---- */
+  --ink:            #16161A;
+  --ink-2:          #5C5C67;
+  --ink-3:          #8E8E99;
+
+  /* ---- surfaces ---- */
+  --bg:             #FAFAF9;
+  --card:           #FFFFFF;
+  --surface-2:      #FCFCFB;   /* table head, muted field */
+  --row-hover:      #FDFBF9;
+  --line:           #ECEBE8;
+  --line-strong:    #D6D4CF;
+
+  /* ---- brand ---- */
+  --o:              #FF6B2C;
+  --o-2:            #FFA23A;
+  --tint:           #FFF2EA;
+  --o-line:         #FFD9C4;
+  --grad:           linear-gradient(135deg, #FF6B2C, #FFA23A);
+  --grad-text:      linear-gradient(100deg, #FF6B2C, #FFA23A);
+
+  /* ---- status ---- */
+  --warn:           #B45309;
+  --bad:            #DC2626;
+  --good:           #15803D;
+  --dot-warn:       #EAB308;
+  --dot-bad:        #DC2626;
+  --dot-good:       #15803D;
+  --dot-neutral:    #D8D6D1;
+
+  /* ---- component-local ---- */
+  --placeholder:    #B6B4AF;
+  --track:          #F1EFEC;   /* chart track */
+  --fill:           #DAD7D2;   /* chart fill */
+  --count-bg:       #F3F1ED;   /* sub-nav count pill */
+  --count-alert-bg: #FEF3C7;
+
+  /* ---- ambient glow ---- */
+  --glow-1:         rgba(255,107,44,.16);
+  --glow-2:         rgba(255,162,58,.06);
+  --glow-3:         rgba(22,22,26,.05);
+
+  /* ---- shadows ---- */
+  --sh-card:        0 1px 2px rgba(22,22,26,.03);
+  --sh-kpi-hover:   0 22px 40px -20px rgba(255,107,44,.30);
+  --sh-tile-hover:  0 18px 34px -18px rgba(255,107,44,.28);
+  --sh-hub-hover:   0 28px 50px -22px rgba(255,107,44,.35), 0 2px 6px rgba(22,22,26,.04);
+  --sh-btn:         0 10px 24px -10px rgba(255,107,44,.6);
+  --sh-btn-hover:   0 18px 34px -12px rgba(255,107,44,.7);
+  --sh-pri:         0 8px 20px -9px rgba(255,107,44,.6);
+  --sh-pri-hover:   0 14px 28px -10px rgba(255,107,44,.7);
+  --ring:           0 0 0 4px rgba(255,107,44,.13);
+
+  /* ---- glass ---- */
+  --glass:          rgba(255,255,255,.74);
+  --glass-blur:     18px;
+
+  /* ---- motion ---- */
+  --spring:         cubic-bezier(.2,.9,.3,1.2);
+  --spring-tile:    cubic-bezier(.2,.9,.3,1.3);
+  --ease:           cubic-bezier(.2,.9,.3,1);
+
+  /* ---- radii (named by usage, not by scale) ---- */
+  --r-xs:  5px;    /* checkbox */
+  --r-sm:  8px;    /* logo mark, chart track, ghost row action */
+  --r-md:  9px;    /* pagination button, 30px chip */
+  --r-lg:  10px;   /* search field, filter pill, 34px chip */
+  --r-xl:  11px;   /* avatar, segmented, ghost + primary button */
+  --r-2xl: 12px;   /* text input, submit button */
+  --r-3xl: 15px;   /* hub icon tile */
+  --r-4xl: 16px;   /* stat tile */
+  --r-5xl: 18px;   /* KPI card, panel */
+  --r-6xl: 20px;   /* hub card */
+  --r-pill: 20px;
+
+  /* ---- layout ---- */
+  --bar-h:    68px;
+  --tabs-h:   50px;
+  --shell-x:  40px;
+  --wrap-app: 1320px;  /* dashboard and module pages */
+  --wrap-hub: 1120px;  /* navigation hub */
+}
+
+[data-theme='dark'] {
+  --ink:            #F4F4F5;
+  --ink-2:          #A1A1AA;
+  --ink-3:          #71717A;
+
+  --bg:             #0D0D10;
+  --card:           #161619;
+  --surface-2:      #131317;
+  --row-hover:      #1A1A1F;
+  --line:           #232329;
+  --line-strong:    #3F3F46;
+
+  --o:              #FF7A3D;
+  --o-2:            #FFB05C;
+  --tint:           rgba(255,122,61,.12);
+  --o-line:         #3A2A20;
+  --grad:           linear-gradient(135deg, #FF7A3D, #FFB05C);
+  --grad-text:      linear-gradient(100deg, #FF7A3D, #FFB05C);
+
+  --warn:           #FBBF24;
+  --bad:            #F87171;
+  --good:           #4ADE80;               /* DERIVED */
+  --dot-warn:       #FBBF24;
+  --dot-bad:        #F87171;
+  --dot-good:       #4ADE80;               /* DERIVED */
+  --dot-neutral:    #3F3F46;
+
+  --placeholder:    #52525B;
+  --track:          #1F1F24;               /* DERIVED */
+  --fill:           #2E2E35;               /* DERIVED */
+  --count-bg:       #1F1F24;               /* DERIVED */
+  --count-alert-bg: rgba(251,191,36,.14);  /* DERIVED */
+
+  --glow-1:         rgba(255,122,61,.20);
+  --glow-2:         rgba(255,122,61,.05);
+  --glow-3:         rgba(255,255,255,.03);
+
+  --sh-card:        0 1px 2px rgba(0,0,0,.30);
+  --sh-kpi-hover:   0 22px 40px -20px rgba(255,122,61,.28);
+  --sh-tile-hover:  0 18px 34px -18px rgba(255,122,61,.26);
+  --sh-hub-hover:   0 30px 60px -24px rgba(255,122,61,.28);
+  --sh-btn:         0 10px 24px -10px rgba(255,122,61,.5);
+  --sh-btn-hover:   0 18px 34px -12px rgba(255,122,61,.6);
+  --sh-pri:         0 8px 20px -9px rgba(255,122,61,.5);
+  --sh-pri-hover:   0 14px 28px -10px rgba(255,122,61,.6);
+  --ring:           0 0 0 4px rgba(255,122,61,.16);
+
+  --glass:          rgba(13,13,16,.72);
+}
+
+/* Sign-in left panel: graphite in both themes. */
+.on-graphite {
+  /* `color` is inherited as a resolved value, so redefining --ink alone does
+     nothing to text that never re-declares it — the panel has to re-apply it
+     once here. Without this the headline inherits body's dark ink in light
+     mode and disappears against the graphite. */
+  color: var(--ink);
+
+  --ink:   #F4F4F5;
+  --ink-2: #A1A1AA;
+  --ink-3: #71717A;
+  --bg:    #0D0D10;
+  --card:  #161619;
+  --line:  #232329;
+  --o:     #FF6B2C;
+  --o-2:   #FFA23A;
+  --grad:  linear-gradient(135deg, #FF6B2C, #FFA23A);
+}

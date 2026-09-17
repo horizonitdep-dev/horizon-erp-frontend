@@ -1,0 +1,249 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Add / edit employee — transcribed from design/hirs-add-employee.html.
+
+   The form mirrors the paper form HIRS-IMS-RM-F26.5 Rev V2, section for
+   section, which is why it is four numbered parts rather than one long grid.
+   Geometry is exact; every colour is an existing token.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════ HEAD ══════════ */
+
+.ef-crumb {
+  display: flex; align-items: center; gap: 8px;
+  font: 500 12.5px var(--font-inter); color: var(--ink-3);
+  margin-bottom: 14px;
+}
+.ef-crumb a { color: var(--ink-3); text-decoration: none; transition: color .2s; }
+.ef-crumb a:hover { color: var(--o); }
+.ef-crumb svg { width: 13px; height: 13px; stroke-width: 2; opacity: .5; }
+
+.ef-docref { margin-top: 9px; font: 400 11.5px var(--font-mono); color: var(--ink-3); }
+
+/* ══════════ LAYOUT ══════════ */
+
+.ef-cols { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+.ef-stack { display: grid; gap: 16px; }
+
+.ef-phead {
+  padding: 18px 24px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 12px;
+}
+.ef-pnum {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--o); background: var(--tint);
+  padding: 5px 10px; border-radius: var(--r-pill); flex: none;
+}
+.ef-phead h2 { font: 600 17px var(--font-sora); letter-spacing: -.02em; }
+.ef-phead .note { margin-top: 3px; font-size: 12.5px; color: var(--ink-3); }
+
+.ef-pbody { padding: 22px 24px 26px; }
+.ef-pbody + .ef-pbody { border-top: 1px solid var(--line); }
+
+.ef-grp {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 9px;
+}
+.ef-grp .tag {
+  font: 500 10px var(--font-inter); letter-spacing: .08em; color: var(--ink-3);
+  background: var(--count-bg); padding: 3px 8px; border-radius: var(--r-pill);
+  text-transform: none;
+}
+
+.ef-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 18px; }
+.ef-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px 18px; }
+.ef-span   { grid-column: 1 / -1; }
+
+/* ══════════ FIELDS ══════════ */
+
+.ef-field > label {
+  display: block; font: 500 11px var(--font-inter);
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 8px;
+}
+.ef-req { color: var(--o); margin-left: 3px; }
+.ef-opt {
+  color: var(--ink-3); font-weight: 400; letter-spacing: 0;
+  text-transform: none; font-size: 11px; margin-left: 6px;
+}
+
+.ef-shell { position: relative; }
+.ef-shell input,
+.ef-shell select,
+.ef-shell textarea {
+  width: 100%; height: 50px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--card); padding: 0 15px;
+  font: 400 15px var(--font-inter); color: var(--ink);
+  outline: none; transition: border-color .2s, box-shadow .2s;
+  appearance: none; -webkit-appearance: none;
+}
+.ef-shell input::placeholder,
+.ef-shell textarea::placeholder { color: var(--placeholder); }
+.ef-shell input:focus,
+.ef-shell select:focus,
+.ef-shell textarea:focus { border-color: var(--o); box-shadow: var(--ring); }
+.ef-shell input.mono { font: 500 14px var(--font-mono); }
+.ef-shell select { cursor: pointer; padding-right: 44px; }
+.ef-shell select.ph { color: var(--placeholder); }
+.ef-shell textarea {
+  height: auto; min-height: 88px; padding: 14px 15px;
+  line-height: 1.55; resize: vertical;
+}
+.ef-ic {
+  position: absolute; right: 15px; top: 25px; transform: translateY(-50%);
+  color: var(--ink-3); display: flex; pointer-events: none;
+}
+.ef-hint { margin-top: 8px; font-size: 12.5px; color: var(--ink-3); line-height: 1.45; }
+.ef-hint b { font: 500 12px var(--font-mono); color: var(--ink-2); }
+
+/* ══════════ CHOICE PILLS ══════════ */
+
+.ef-seg { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ef-seg label {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 15px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl); background: var(--card);
+  font: 500 13.5px var(--font-inter); color: var(--ink-2); cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.ef-seg label:hover { border-color: var(--line-strong); }
+.ef-seg input { position: absolute; opacity: 0; pointer-events: none; }
+.ef-seg label:has(input:checked) {
+  background: var(--tint); border-color: var(--o-line); color: var(--o);
+}
+/* Keyboard focus has to be visible even though the radio itself is hidden. */
+.ef-seg label:has(input:focus-visible) { border-color: var(--o); box-shadow: var(--ring); }
+.ef-other {
+  height: 44px; flex: 1; min-width: 150px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl); background: var(--card);
+  padding: 0 14px; font: 400 14px var(--font-inter); color: var(--ink);
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.ef-other::placeholder { color: var(--placeholder); }
+.ef-other:focus { border-color: var(--o); box-shadow: var(--ring); }
+
+/* ══════════ CONTACT ROWS ══════════ */
+
+.ef-tbl { border: 1px solid var(--line); border-radius: var(--r-4xl); overflow: hidden; }
+.ef-trow { display: grid; align-items: center; border-bottom: 1px solid var(--line); }
+.ef-trow:last-child { border-bottom: 0; }
+.ef-trow.hdr { background: var(--surface-2); }
+.ef-trow.hdr > div {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3); padding: 12px 16px;
+}
+.ef-trow > div { border-right: 1px solid var(--line); }
+.ef-trow > div:last-child { border-right: 0; }
+.ef-rl { font: 500 13px var(--font-inter); padding: 0 16px; color: var(--ink-2); }
+.ef-rl small {
+  display: block; font: 400 11px var(--font-inter);
+  color: var(--ink-3); margin-top: 2px;
+}
+.ef-trow input {
+  width: 100%; height: 56px; border: 0; background: transparent;
+  padding: 0 16px; font: 400 14px var(--font-inter); color: var(--ink);
+  outline: none; transition: background .18s;
+}
+.ef-trow input::placeholder { color: var(--placeholder); }
+.ef-trow input:focus { background: var(--tint); }
+.ef-fam .ef-trow { grid-template-columns: 190px 1fr 190px 190px; }
+.ef-emg .ef-trow { grid-template-columns: 1fr 1fr 170px 190px 52px; }
+.ef-del {
+  display: grid; place-items: center; color: var(--ink-3);
+  cursor: pointer; font-size: 17px; height: 56px;
+  background: none; border: 0; border-right: 0; width: 100%;
+}
+.ef-del:hover { color: var(--bad); }
+.ef-del:disabled { opacity: .35; cursor: not-allowed; }
+.ef-addrow {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  font: 500 13px var(--font-inter); color: var(--o);
+  cursor: pointer; background: none; border: 0; padding: 0;
+}
+.ef-addrow svg { width: 15px; height: 15px; stroke-width: 2; }
+
+/* ══════════ PHOTO ══════════ */
+
+.ef-photo {
+  border: 1px dashed var(--line-strong); border-radius: var(--r-2xl);
+  background: var(--surface-2); aspect-ratio: 3/4;
+  display: grid; place-items: center; text-align: center;
+  cursor: pointer; padding: 18px;
+  transition: border-color .2s, background .2s;
+  width: 100%;
+}
+.ef-photo:hover { border-color: var(--o-line); background: var(--tint); }
+.ef-photo svg { width: 24px; height: 24px; stroke: var(--ink-3); stroke-width: 1.6; margin: 0 auto 10px; }
+.ef-photo b { display: block; font: 500 13px var(--font-inter); color: var(--ink-2); }
+.ef-photo span { display: block; margin-top: 4px; font-size: 12px; color: var(--ink-3); }
+
+/* ══════════ RAIL ══════════ */
+
+.ef-rail { position: sticky; top: 20px; display: grid; gap: 16px; }
+.ef-rail .panel { padding: 20px; }
+.ef-rail h3 {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 16px;
+}
+.ef-prow {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 0; font-size: 13px; border-bottom: 1px solid var(--line);
+}
+.ef-prow:last-child { border-bottom: 0; padding-bottom: 0; }
+.ef-prow .k { color: var(--ink-3); }
+.ef-prow .v { font: 500 12.5px var(--font-mono); text-align: right; }
+.ef-prow .v.mut { color: var(--ink-3); font-weight: 400; }
+.ef-check {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 0; font-size: 13px; color: var(--ink-2); line-height: 1.45;
+}
+.ef-check svg { width: 15px; height: 15px; flex: none; margin-top: 1px; stroke-width: 2.2; }
+.ef-check.done svg { stroke: var(--good); }
+.ef-check.todo { color: var(--ink-3); }
+.ef-check.todo svg { stroke: var(--dot-neutral); }
+.ef-railnote { font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+
+/* ══════════ ACTION BAR ══════════ */
+
+.ef-actions {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: var(--glass); backdrop-filter: blur(var(--glass-blur));
+  border-top: 1px solid var(--line);
+}
+.ef-actions .inner {
+  max-width: var(--wrap-app); margin: 0 auto;
+  padding: 16px var(--shell-x);
+  display: flex; align-items: center; gap: 12px;
+}
+.ef-actions .status {
+  font-size: 13px; color: var(--ink-3);
+  display: flex; align-items: center; gap: 8px;
+}
+.ef-actions .right { margin-left: auto; display: flex; gap: 10px; }
+
+/* The fixed bar must not sit on top of the last panel. */
+.ef-page { padding-bottom: 112px; }
+
+/* Field-level errors keep the §7 treatment. */
+.ef-field .field-error { margin-top: 8px; }
+
+@media (max-width: 1100px) {
+  .ef-cols { grid-template-columns: 1fr; }
+  .ef-rail { position: static; }
+}
+@media (max-width: 860px) {
+  .ef-grid, .ef-grid-3 { grid-template-columns: 1fr; }
+  .ef-fam .ef-trow, .ef-emg .ef-trow { grid-template-columns: 1fr; }
+  .ef-trow > div { border-right: 0; border-bottom: 1px solid var(--line); }
+  .ef-trow > div:last-child { border-bottom: 0; }
+}
+
+/* A <fieldset> carries the group semantics for the radio pills; its legend has
+   to be styled as the same label the other fields use. */
+.ef-field legend {
+  display: block; font: 500 11px var(--font-inter);
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 8px; padding: 0;
+}
+fieldset.ef-field { border: 0; padding: 0; margin: 0; min-inline-size: 0; }

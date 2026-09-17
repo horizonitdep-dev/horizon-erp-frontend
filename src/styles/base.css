@@ -1,0 +1,75 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base layer — DESIGN.md §8, plus the type scale from §5.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { color-scheme: light; }
+html[data-theme='dark'] { color-scheme: dark; }
+
+body {
+  font-family: var(--font-inter), Inter, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--ink);
+  transition: background .3s ease, color .3s ease;
+}
+
+::selection { background: var(--tint); color: var(--o); }
+
+@keyframes up   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.an      { animation: up .6s  var(--spring) both; }
+.an-fast { animation: up .55s var(--spring) both; }
+
+.grad-text {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: none;
+  border-color: var(--o);
+  box-shadow: var(--ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ══════════ TYPE SCALE — DESIGN.md §5 ══════════
+   Do not set font sizes inline. If a screen genuinely needs a size that is not
+   here, flag it rather than adding one. */
+
+.t-display-xl { font: 600 52px/1.05 var(--font-sora); letter-spacing: -.035em; }
+.t-display-lg { font: 600 46px/1.06 var(--font-sora); letter-spacing: -.04em; }
+.t-display    { font: 600 38px var(--font-sora);      letter-spacing: -.035em; }
+.t-h1         { font: 600 36px var(--font-sora);      letter-spacing: -.035em; }
+.t-h2         { font: 600 34px var(--font-sora);      letter-spacing: -.03em; }
+.t-h3         { font: 600 21px var(--font-sora);      letter-spacing: -.02em; }
+.t-h4         { font: 600 17px var(--font-sora);      letter-spacing: -.02em; }
+
+.t-metric-lg  { font: 600 38px/1 var(--font-sora);    letter-spacing: -.04em; }
+.t-metric     { font: 600 30px/1 var(--font-sora);    letter-spacing: -.035em; }
+.t-metric-sm  { font: 600 24px var(--font-sora);      letter-spacing: -.02em; }
+
+.t-logo       { font: 700 19px var(--font-sora);      letter-spacing: -.03em; }
+.t-logo-lg    { font: 700 20px var(--font-sora);      letter-spacing: -.03em; }
+
+.t-label      { font: 500 11px var(--font-inter);     letter-spacing: .1em;  text-transform: uppercase; }
+.t-label-sm   { font: 500 10.5px var(--font-inter);   letter-spacing: .11em; text-transform: uppercase; }
+.t-eyebrow    { font: 500 12px var(--font-inter);     letter-spacing: .14em; text-transform: uppercase; }
+.t-tag        { font: 500 12px var(--font-inter);     letter-spacing: .12em; text-transform: uppercase; }
+
+.t-body-lg    { font-size: 16px;   line-height: 1.6; }
+.t-body       { font-size: 15px;   line-height: 1.6; }
+.t-lede       { font-size: 14.5px; }
+.t-sub        { font-size: 13.5px; line-height: 1.5; }
+.t-meta       { font-size: 12.5px; }
+
+.t-mono       { font: 500 13.5px var(--font-mono); }
+.t-mono-sm    { font: 500 12.5px var(--font-mono); }
+.t-mono-xs    { font: 500 11.5px var(--font-mono); }

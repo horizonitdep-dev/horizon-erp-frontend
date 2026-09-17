@@ -1,0 +1,13 @@
+/* Order matters: tokens define the variables everything else reads, base sets
+   the reset and type scale, then components and screens. DESIGN.md §8 puts the
+   base layer before the Tailwind directives. */
+@import '../styles/tokens.css';
+@import '../styles/base.css';
+@import '../styles/components.css';
+@import '../styles/screens.css';
+@import '../styles/employee-form.css';
+@import '../styles/departure.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

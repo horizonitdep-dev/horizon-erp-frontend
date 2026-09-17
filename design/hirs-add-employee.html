@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIRS — Add Employee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════ TOKENS ═══════════ */
+:root{
+  --ink:#16161A; --ink-2:#5C5C67; --ink-3:#8E8E99;
+  --bg:#FAFAF9; --card:#FFFFFF; --surface-2:#FCFCFB; --row-hover:#FDFBF9;
+  --line:#ECEBE8; --line-strong:#D6D4CF;
+  --o:#FF6B2C; --o-2:#FFA23A; --tint:#FFF2EA; --o-line:#FFD9C4;
+  --grad:linear-gradient(135deg,#FF6B2C,#FFA23A);
+  --warn:#B45309; --bad:#DC2626; --good:#15803D;
+  --dot-warn:#EAB308; --dot-bad:#DC2626; --dot-good:#15803D; --dot-neutral:#D8D6D1;
+  --placeholder:#B6B4AF; --count-bg:#F3F1ED; --count-alert-bg:#FEF3C7;
+  --glow-1:rgba(255,107,44,.16); --glow-2:rgba(255,162,58,.06);
+  --sh-card:0 1px 2px rgba(22,22,26,.03);
+  --sh-pri:0 8px 20px -9px rgba(255,107,44,.6);
+  --sh-pri-hover:0 14px 28px -10px rgba(255,107,44,.7);
+  --ring:0 0 0 4px rgba(255,107,44,.13);
+  --glass:rgba(255,255,255,.74);
+  --spring:cubic-bezier(.2,.9,.3,1.2);
+  --r-sm:8px; --r-lg:10px; --r-xl:11px; --r-2xl:12px; --r-4xl:16px; --r-5xl:18px; --r-pill:20px;
+  --bar-h:68px; --tabs-h:50px; --shell-x:40px; --wrap-app:1320px;
+  --font-sora:'Sora',sans-serif; --font-inter:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+[data-theme='dark']{
+  --ink:#F4F4F5; --ink-2:#A1A1AA; --ink-3:#71717A;
+  --bg:#0D0D10; --card:#161619; --surface-2:#131317; --row-hover:#1A1A1F;
+  --line:#232329; --line-strong:#3F3F46;
+  --o:#FF7A3D; --o-2:#FFB05C; --tint:rgba(255,122,61,.12); --o-line:#3A2A20;
+  --grad:linear-gradient(135deg,#FF7A3D,#FFB05C);
+  --warn:#FBBF24; --bad:#F87171; --good:#4ADE80;
+  --dot-warn:#FBBF24; --dot-bad:#F87171; --dot-good:#4ADE80; --dot-neutral:#3F3F46;
+  --placeholder:#52525B; --count-bg:#1F1F24; --count-alert-bg:rgba(251,191,36,.14);
+  --glow-1:rgba(255,122,61,.20); --glow-2:rgba(255,122,61,.05);
+  --sh-card:0 1px 2px rgba(0,0,0,.30);
+  --sh-pri:0 8px 20px -9px rgba(255,122,61,.5);
+  --sh-pri-hover:0 14px 28px -10px rgba(255,122,61,.6);
+  --ring:0 0 0 4px rgba(255,122,61,.16);
+  --glass:rgba(13,13,16,.72);
+}
+
+/* ═══════════ BASE ═══════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-inter);-webkit-font-smoothing:antialiased;background:var(--bg);color:var(--ink);transition:background .3s ease,color .3s ease}
+::selection{background:var(--tint);color:var(--o)}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.an{animation:up .55s var(--spring) both}
+svg.s{stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* ═══════════ SHELL ═══════════ */
+.bar{position:relative;z-index:4;height:var(--bar-h);display:flex;align-items:center;gap:26px;padding:0 var(--shell-x);background:var(--glass);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:9px;font:700 19px var(--font-sora);letter-spacing:-.03em}
+.spark{width:26px;height:26px;border-radius:var(--r-sm);background:var(--grad);display:grid;place-items:center;color:#fff;font:700 13px var(--font-sora)}
+.gsearch{flex:1;max-width:400px;height:38px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);display:flex;align-items:center;gap:9px;padding:0 14px;color:var(--ink-3);font-size:14px}
+.bright{margin-left:auto;display:flex;align-items:center;gap:18px}
+.bell{position:relative;color:var(--ink-2);display:flex}
+.bell i{position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--o)}
+.who{display:flex;align-items:center;gap:10px}
+.who b{display:block;font:500 13px var(--font-inter)}
+.who span{display:block;font-size:11px;color:var(--ink-3)}
+.av{width:34px;height:34px;border-radius:var(--r-xl);background:var(--grad);display:grid;place-items:center;color:#fff;font:600 13px var(--font-inter)}
+.tt{width:34px;height:34px;border-radius:var(--r-xl);border:1px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--ink-2);cursor:pointer;transition:border-color .2s,color .2s}
+.tt:hover{border-color:var(--o-line);color:var(--o)}
+
+.tabs{position:relative;z-index:4;height:var(--tabs-h);display:flex;gap:4px;padding:0 var(--shell-x);background:var(--glass);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.tabs a{position:relative;display:flex;align-items:center;padding:0 16px;font:500 14px var(--font-inter);color:var(--ink-3);text-decoration:none;transition:color .2s}
+.tabs a:hover{color:var(--ink-2)}
+.tabs a.on{color:var(--ink);font-weight:600}
+.tabs a.on::after{content:'';position:absolute;left:16px;right:16px;bottom:-1px;height:2.5px;background:var(--grad);border-radius:2px 2px 0 0}
+
+.sub{position:relative;z-index:4;display:flex;gap:2px;padding:0 var(--shell-x);background:var(--card);border-bottom:1px solid var(--line)}
+.sub a{position:relative;display:flex;align-items:center;gap:9px;padding:15px 15px 14px;text-decoration:none;font:500 13.5px var(--font-inter);color:var(--ink-3);transition:color .2s}
+.sub a:hover{color:var(--ink-2)}
+.sub a.on{color:var(--ink);font-weight:600}
+.sub a.on::after{content:'';position:absolute;left:15px;right:15px;bottom:-1px;height:2px;background:var(--o);border-radius:2px 2px 0 0}
+.n{font:500 11px var(--font-mono);padding:2px 7px;border-radius:var(--r-pill);background:var(--count-bg);color:var(--ink-3)}
+.sub a.on .n{background:var(--tint);color:var(--o)}
+.n.alert{background:var(--count-alert-bg);color:var(--warn)}
+
+.app{min-height:100vh;position:relative;overflow:hidden;padding-bottom:112px}
+.app::before{content:'';position:absolute;width:900px;height:900px;right:-320px;top:-480px;border-radius:50%;background:radial-gradient(circle,var(--glow-1) 0%,var(--glow-2) 42%,transparent 68%);pointer-events:none}
+.wrap{position:relative;z-index:2;max-width:var(--wrap-app);margin:0 auto;padding:36px var(--shell-x) 0}
+
+/* ═══════════ HEAD ═══════════ */
+.crumb{display:flex;align-items:center;gap:8px;font:500 12.5px var(--font-inter);color:var(--ink-3);margin-bottom:14px}
+.crumb a{color:var(--ink-3);text-decoration:none;transition:color .2s}
+.crumb a:hover{color:var(--o)}
+.crumb svg{width:13px;height:13px;stroke-width:2;opacity:.5}
+.head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px}
+.head h1{font:600 36px var(--font-sora);letter-spacing:-.035em}
+.head .lede{margin-top:7px;font-size:14.5px;color:var(--ink-3)}
+.docref{margin-top:9px;font:400 11.5px var(--font-mono);color:var(--ink-3)}
+
+/* ═══════════ LAYOUT ═══════════ */
+.cols{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.stack{display:grid;gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-5xl);overflow:hidden;box-shadow:var(--sh-card)}
+.phead{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.pnum{font:500 10.5px var(--font-inter);letter-spacing:.11em;text-transform:uppercase;color:var(--o);background:var(--tint);padding:5px 10px;border-radius:var(--r-pill);flex:none}
+.phead h3{font:600 17px var(--font-sora);letter-spacing:-.02em}
+.phead .note{margin-top:3px;font-size:12.5px;color:var(--ink-3)}
+.pbody{padding:22px 24px 26px}
+.pbody + .pbody{border-top:1px solid var(--line)}
+.grp{font:500 10.5px var(--font-inter);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px;display:flex;align-items:center;gap:9px}
+.grp .tag{font:500 10px var(--font-inter);letter-spacing:.08em;color:var(--ink-3);background:var(--count-bg);padding:3px 8px;border-radius:var(--r-pill);text-transform:none}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 18px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px 18px}
+.span{grid-column:1/-1}
+
+/* ═══════════ FIELDS ═══════════ */
+.f > label{display:block;font:500 11px var(--font-inter);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.req{color:var(--o);margin-left:3px}
+.opt{color:var(--ink-3);font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;margin-left:6px}
+.sh{position:relative}
+.sh input,.sh select,.sh textarea{width:100%;height:50px;border:1px solid var(--line);border-radius:var(--r-2xl);background:var(--card);padding:0 15px;font:400 15px var(--font-inter);color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s;appearance:none}
+.sh input::placeholder,.sh textarea::placeholder{color:var(--placeholder)}
+.sh input:focus,.sh select:focus,.sh textarea:focus{border-color:var(--o);box-shadow:var(--ring)}
+.sh input.mono{font:500 14px var(--font-mono)}
+.sh select{cursor:pointer;padding-right:44px}
+.sh select.ph{color:var(--placeholder)}
+.sh textarea{height:auto;min-height:88px;padding:14px 15px;line-height:1.55;resize:vertical}
+.sh.icon input,.sh.icon select{padding-right:44px}
+.ic{position:absolute;right:15px;top:25px;transform:translateY(-50%);color:var(--ink-3);display:flex;pointer-events:none}
+.hint{margin-top:8px;font-size:12.5px;color:var(--ink-3);line-height:1.45}
+.hint b{font:500 12px var(--font-mono);color:var(--ink-2)}
+
+/* choice pills */
+.seg{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg label{position:relative;display:flex;align-items:center;gap:8px;height:44px;padding:0 15px;border:1px solid var(--line);border-radius:var(--r-2xl);background:var(--card);font:500 13.5px var(--font-inter);color:var(--ink-2);cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.seg label:hover{border-color:var(--line-strong)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--tint);border-color:var(--o-line);color:var(--o)}
+.other{height:44px;flex:1;min-width:150px;border:1px solid var(--line);border-radius:var(--r-2xl);background:var(--card);padding:0 14px;font:400 14px var(--font-inter);color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s}
+.other::placeholder{color:var(--placeholder)}
+.other:focus{border-color:var(--o);box-shadow:var(--ring)}
+
+/* contact rows */
+.tbl{border:1px solid var(--line);border-radius:var(--r-4xl);overflow:hidden}
+.trow{display:grid;align-items:center;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:0}
+.trow.hdr{background:var(--surface-2)}
+.trow.hdr > div{font:500 10.5px var(--font-inter);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);padding:12px 16px}
+.trow > div{border-right:1px solid var(--line)}
+.trow > div:last-child{border-right:0}
+.rl{font:500 13px var(--font-inter);padding:0 16px;color:var(--ink-2)}
+.rl small{display:block;font:400 11px var(--font-inter);color:var(--ink-3);margin-top:2px}
+.trow input{width:100%;height:56px;border:0;background:transparent;padding:0 16px;font:400 14px var(--font-inter);color:var(--ink);outline:none;transition:background .18s}
+.trow input::placeholder{color:var(--placeholder)}
+.trow input:focus{background:var(--tint)}
+.fam .trow{grid-template-columns:190px 1fr 190px 190px}
+.emg .trow{grid-template-columns:1fr 1fr 170px 190px 52px}
+.del{display:grid;place-items:center;color:var(--ink-3);cursor:pointer;font-size:17px;height:56px}
+.del:hover{color:var(--bad)}
+.addrow{display:flex;align-items:center;gap:8px;margin-top:12px;font:500 13px var(--font-inter);color:var(--o);cursor:pointer;background:none;border:0;padding:0}
+.addrow svg{width:15px;height:15px;stroke-width:2}
+
+/* photo */
+.photo{border:1px dashed var(--line-strong);border-radius:var(--r-2xl);background:var(--surface-2);aspect-ratio:3/4;display:grid;place-items:center;text-align:center;cursor:pointer;padding:18px;transition:border-color .2s,background .2s}
+.photo:hover{border-color:var(--o-line);background:var(--tint)}
+.photo svg{width:24px;height:24px;stroke:var(--ink-3);stroke-width:1.6;margin:0 auto 10px}
+.photo b{display:block;font:500 13px var(--font-inter);color:var(--ink-2)}
+.photo span{display:block;margin-top:4px;font-size:12px;color:var(--ink-3)}
+
+/* rail */
+.rail{position:sticky;top:20px;display:grid;gap:16px}
+.rail .panel{padding:20px}
+.rail h4{font:500 10.5px var(--font-inter);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
+.prow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:13px;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0;padding-bottom:0}
+.prow .k{color:var(--ink-3)}
+.prow .v{font:500 12.5px var(--font-mono);text-align:right}
+.prow .v.mut{color:var(--ink-3);font-weight:400}
+.check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;font-size:13px;color:var(--ink-2);line-height:1.45}
+.check svg{width:15px;height:15px;flex:none;margin-top:1px;stroke-width:2.2}
+.check.done svg{stroke:var(--good)}
+.check.todo{color:var(--ink-3)}
+.check.todo svg{stroke:var(--dot-neutral)}
+.railnote{font-size:13px;color:var(--ink-3);line-height:1.5}
+
+/* action bar */
+.actions{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--glass);backdrop-filter:blur(18px);border-top:1px solid var(--line)}
+.actions .inner{max-width:var(--wrap-app);margin:0 auto;padding:16px var(--shell-x);display:flex;align-items:center;gap:12px}
+.actions .status{font-size:13px;color:var(--ink-3);display:flex;align-items:center;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;flex:none}
+.dot.warn{background:var(--dot-warn)}
+.actions .right{margin-left:auto;display:flex;gap:10px}
+.gh{height:42px;padding:0 16px;border:1px solid var(--line);background:var(--card);border-radius:var(--r-xl);font:500 13.5px var(--font-inter);color:var(--ink-2);cursor:pointer;display:flex;align-items:center;gap:8px;transition:border-color .2s,color .2s}
+.gh:hover{border-color:var(--line-strong);color:var(--ink)}
+.pri{height:42px;padding:0 18px;border:0;border-radius:var(--r-xl);background:var(--grad);color:#fff;font:600 13.5px var(--font-inter);cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:var(--sh-pri);transition:transform .3s var(--spring),box-shadow .3s}
+.pri:hover{transform:translateY(-2px);box-shadow:var(--sh-pri-hover)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="bar">
+    <div class="logo"><span class="spark">H</span>HIRS</div>
+    <div class="gsearch">
+      <svg class="s" width="15" height="15" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Search workers, clients, contracts
+    </div>
+    <div class="bright">
+      <button class="tt" onclick="tog()" aria-label="Toggle theme">
+        <svg class="s" id="ti" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.7"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+      <span class="bell">
+        <svg class="s" width="19" height="19" viewBox="0 0 24 24" stroke-width="1.6"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <i></i>
+      </span>
+      <div class="who">
+        <div class="av">HK</div>
+        <div><b>Hamed Al Karbi</b><span>Chairman</span></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <a href="#">Overview</a><a href="#" class="on">HR</a><a href="#">Business</a>
+    <a href="#">Operations</a><a href="#">Finance</a><a href="#">IT</a>
+  </nav>
+
+  <nav class="sub">
+    <a href="#" class="on">Current employees <span class="n">412</span></a>
+    <a href="#">Cancelled employees <span class="n">38</span></a>
+    <a href="#">Horizon docs <span class="n alert">9</span></a>
+    <a href="#">Letter reference <span class="n">23</span></a>
+    <a href="#">Attendance</a>
+  </nav>
+
+  <div class="wrap">
+
+    <div class="crumb an">
+      <a href="#">HR</a>
+      <svg class="s" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      <a href="#">Current employees</a>
+      <svg class="s" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>
+      <span>Add employee</span>
+    </div>
+
+    <div class="head an" style="animation-delay:.04s">
+      <div>
+        <h1>Add employee</h1>
+        <div class="lede">Employee personal information. Fields marked <span style="color:var(--o)">*</span> are required.</div>
+        <div class="docref">Mirrors HIRS-IMS-RM-F26.5 · Rev V2 · same section order as the paper form</div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="stack">
+
+        <!-- ═══ PART 1 ═══ -->
+        <div class="panel an" style="animation-delay:.08s">
+          <div class="phead">
+            <span class="pnum">Part 1</span>
+            <div>
+              <h3>Job information</h3>
+              <div class="note">Role, contract and document details</div>
+            </div>
+          </div>
+
+          <div class="pbody">
+            <div class="grid">
+              <div class="f span">
+                <label>Employee name <span class="req">*</span></label>
+                <div class="sh"><input type="text" placeholder="As printed on the passport"></div>
+              </div>
+              <div class="f">
+                <label>Employee I.D. <span class="req">*</span></label>
+                <div class="sh"><input type="text" class="mono" placeholder="HIRS-04213"></div>
+              </div>
+              <div class="f">
+                <label>Designation <span class="req">*</span></label>
+                <div class="sh icon">
+                  <select class="ph">
+                    <option value="" selected>Select designation</option>
+                    <option>Pipeline welder</option><option>TIG &amp; ARC welder</option>
+                    <option>CO2 welder</option><option>Scaffolder</option>
+                    <option>Electrician</option><option>Rigger</option><option>Helper</option>
+                  </select>
+                  <span class="ic"><svg class="s" width="13" height="13" viewBox="0 0 24 24" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>
+                </div>
+                <div class="hint">Shown as <b>Trade</b> on the employee list.</div>
+              </div>
+              <div class="f">
+                <label>Department <span class="req">*</span></label>
+                <div class="sh icon">
+                  <select class="ph">
+                    <option value="" selected>Select department</option>
+                    <option>HR</option><option>Business</option><option>Operations</option>
+                    <option>Finance</option><option>IT</option>
+                  </select>
+                  <span class="ic"><svg class="s" width="13" height="13" viewBox="0 0 24 24" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>
+                </div>
+              </div>
+              <div class="f">
+                <label>Reporting manager <span class="req">*</span></label>
+                <div class="sh icon">
+                  <select class="ph">
+                    <option value="" selected>Select manager</option>
+                    <option>Abdul Hakkeem</option><option>Faisal Ahmad</option><option>Rashid Al Mansoori</option>
+                  </select>
+                  <span class="ic"><svg class="s" width="13" height="13" viewBox="0 0 24 24" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>
+                </div>
+              </div>
+              <div class="f">
+                <label>Date of joining <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Contract start <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Contract end <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pbody">
+            <div class="grp">Visa</div>
+            <div class="grid">
+              <div class="f span">
+                <label>Type of visa <span class="req">*</span></label>
+                <div class="seg">
+                  <label><input type="radio" name="visa" checked>Employment</label>
+                  <label><input type="radio" name="visa">Visit</label>
+                  <label><input type="radio" name="visa">Transferable</label>
+                  <label><input type="radio" name="visa">Dependent</label>
+                  <label><input type="radio" name="visa">Others</label>
+                  <input class="other" type="text" placeholder="Specify">
+                </div>
+              </div>
+              <div class="f">
+                <label>Issue date <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Expiry date <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pbody">
+            <div class="grp">Visit visa <span class="tag">Optional</span></div>
+            <div class="grid-3">
+              <div class="f">
+                <label>Visit visa number</label>
+                <div class="sh"><input type="text" class="mono" placeholder="—"></div>
+              </div>
+              <div class="f">
+                <label>Issue date</label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Expiry date</label>
+                <div class="sh"><input type="date"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pbody">
+            <div class="grp">Emirates I.D.</div>
+            <div class="grid-3">
+              <div class="f">
+                <label>Emirates I.D. number <span class="req">*</span></label>
+                <div class="sh"><input type="text" class="mono" placeholder="784-0000-0000000-0"></div>
+              </div>
+              <div class="f">
+                <label>Issue date <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Expiry date <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pbody">
+            <div class="grp">Passport</div>
+            <div class="grid">
+              <div class="f">
+                <label>Passport number <span class="req">*</span></label>
+                <div class="sh"><input type="text" class="mono" placeholder="P1234567"></div>
+              </div>
+              <div class="f">
+                <label>Issuing country <span class="req">*</span></label>
+                <div class="sh icon">
+                  <select class="ph">
+                    <option value="" selected>Select country</option>
+                    <option>India</option><option>Pakistan</option><option>Bangladesh</option>
+                    <option>Nepal</option><option>Philippines</option><option>Sri Lanka</option>
+                  </select>
+                  <span class="ic"><svg class="s" width="13" height="13" viewBox="0 0 24 24" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>
+                </div>
+              </div>
+              <div class="f">
+                <label>Issue date <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Valid until <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PART 2 ═══ -->
+        <div class="panel an" style="animation-delay:.12s">
+          <div class="phead">
+            <span class="pnum">Part 2</span>
+            <div>
+              <h3>Personal data</h3>
+              <div class="note">Identity, contact details and addresses</div>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="grid-3">
+              <div class="f">
+                <label>Date of birth <span class="req">*</span></label>
+                <div class="sh"><input type="date"></div>
+              </div>
+              <div class="f">
+                <label>Nationality <span class="req">*</span></label>
+                <div class="sh icon">
+                  <select class="ph">
+                    <option value="" selected>Select nationality</option>
+                    <option>India</option><option>Pakistan</option><option>Bangladesh</option>
+                    <option>Nepal</option><option>Philippines</option><option>Sri Lanka</option>
+                  </select>
+                  <span class="ic"><svg class="s" width="13" height="13" viewBox="0 0 24 24" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>
+                </div>
+              </div>
+              <div class="f">
+                <label>Religion <span class="req">*</span></label>
+                <div class="sh"><input type="text" placeholder="—"></div>
+              </div>
+
+              <div class="f">
+                <label>Email address <span class="req">*</span></label>
+                <div class="sh"><input type="email" placeholder="name@example.com"></div>
+              </div>
+              <div class="f">
+                <label>Tel no. <span class="req">*</span></label>
+                <div class="sh"><input type="tel" class="mono" placeholder="+971 2 000 0000"></div>
+              </div>
+              <div class="f">
+                <label>Mobile no. <span class="req">*</span></label>
+                <div class="sh"><input type="tel" class="mono" placeholder="+971 50 000 0000"></div>
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top:20px">
+              <div class="f">
+                <label>Present address <span class="req">*</span></label>
+                <div class="sh"><textarea placeholder="Address in the UAE"></textarea></div>
+              </div>
+              <div class="f">
+                <label>Permanent address <span class="opt">home country</span> <span class="req">*</span></label>
+                <div class="sh"><textarea placeholder="Address in the home country"></textarea></div>
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top:20px">
+              <div class="f">
+                <label>Gender <span class="req">*</span></label>
+                <div class="seg">
+                  <label><input type="radio" name="gen" checked>Male</label>
+                  <label><input type="radio" name="gen">Female</label>
+                </div>
+              </div>
+              <div class="f">
+                <label>No. of children</label>
+                <div class="sh"><input type="number" class="mono" min="0" placeholder="0"></div>
+              </div>
+              <div class="f span">
+                <label>Marital status <span class="req">*</span></label>
+                <div class="seg">
+                  <label><input type="radio" name="mar" checked>Single</label>
+                  <label><input type="radio" name="mar">Married</label>
+                  <label><input type="radio" name="mar">Others</label>
+                  <input class="other" type="text" placeholder="Specify">
+                </div>
+              </div>
+              <div class="f span">
+                <label>UAE driving license <span class="req">*</span></label>
+                <div class="seg">
+                  <label><input type="radio" name="lic">Yes</label>
+                  <label><input type="radio" name="lic" checked>No</label>
+                  <label><input type="radio" name="lic">Others</label>
+                  <input class="other" type="text" placeholder="Specify">
+                </div>
+              </div>
+              <div class="f">
+                <label>License valid until</label>
+                <div class="sh"><input type="date"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PART 3 ═══ -->
+        <div class="panel an" style="animation-delay:.16s">
+          <div class="phead">
+            <span class="pnum">Part 3</span>
+            <div>
+              <h3>Family contact information</h3>
+              <div class="note">Leave a row blank if it doesn't apply</div>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="tbl fam">
+              <div class="trow hdr"><div></div><div>Name</div><div>Location</div><div>Contact no.</div></div>
+              <div class="trow"><div class="rl">Spouse</div><div><input placeholder="Full name"></div><div><input placeholder="City, country"></div><div><input placeholder="+00 000 000 0000"></div></div>
+              <div class="trow"><div class="rl">Children</div><div><input placeholder="Full name"></div><div><input placeholder="City, country"></div><div><input placeholder="+00 000 000 0000"></div></div>
+              <div class="trow"><div class="rl">Family member <small>from home country</small></div><div><input placeholder="Full name"></div><div><input placeholder="City, country"></div><div><input placeholder="+00 000 000 0000"></div></div>
+              <div class="trow"><div class="rl">Relative / friend in UAE</div><div><input placeholder="Full name"></div><div><input placeholder="Emirate"></div><div><input placeholder="+971 00 000 0000"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PART 4 ═══ -->
+        <div class="panel an" style="animation-delay:.2s">
+          <div class="phead">
+            <span class="pnum">Part 4</span>
+            <div>
+              <h3>Contact person in case of emergency</h3>
+              <div class="note">At least one contact is required</div>
+            </div>
+          </div>
+          <div class="pbody">
+            <div class="tbl emg">
+              <div class="trow hdr"><div>Name</div><div>Address</div><div>Relation</div><div>Contact no.</div><div></div></div>
+              <div class="trow"><div><input placeholder="Full name"></div><div><input placeholder="Address"></div><div><input placeholder="Brother"></div><div><input placeholder="+00 000 000 0000"></div><div class="del">×</div></div>
+              <div class="trow"><div><input placeholder="Full name"></div><div><input placeholder="Address"></div><div><input placeholder="Relation"></div><div><input placeholder="+00 000 000 0000"></div><div class="del">×</div></div>
+            </div>
+            <button class="addrow">
+              <svg class="s" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              Add another contact
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════ RAIL ══════ -->
+      <div class="rail">
+
+        <div class="panel an" style="animation-delay:.1s">
+          <h4>Photo</h4>
+          <div class="photo">
+            <div>
+              <svg class="s" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2.5"/><circle cx="12" cy="13" r="3.4"/><path d="M8.5 6 10 3.5h4L15.5 6"/></svg>
+              <b>Upload photo</b>
+              <span>JPG or PNG · passport size</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel an" style="animation-delay:.14s">
+          <h4>Record preview</h4>
+          <div class="prow"><span class="k">Employee I.D.</span><span class="v mut">Not set</span></div>
+          <div class="prow"><span class="k">Designation</span><span class="v mut">Not set</span></div>
+          <div class="prow"><span class="k">Department</span><span class="v mut">Not set</span></div>
+          <div class="prow"><span class="k">Visa expiry</span><span class="v mut">Not set</span></div>
+          <div class="prow"><span class="k">Passport valid until</span><span class="v mut">Not set</span></div>
+        </div>
+
+        <div class="panel an" style="animation-delay:.18s">
+          <h4>Before saving</h4>
+          <div class="check todo"><svg class="s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Part 1 — job information</div>
+          <div class="check todo"><svg class="s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Part 2 — personal data</div>
+          <div class="check todo"><svg class="s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Part 3 — family contacts</div>
+          <div class="check todo"><svg class="s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Part 4 — emergency contact</div>
+        </div>
+
+        <div class="panel an" style="animation-delay:.22s">
+          <h4>Deployment</h4>
+          <div class="railnote">Camp, client and site are set in the Operations module once this record is saved.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <div class="inner">
+      <span class="status"><span class="dot warn"></span>23 required fields left</span>
+      <div class="right">
+        <button class="gh">Cancel</button>
+        <button class="gh">Save and add another</button>
+        <button class="pri">
+          <svg class="s" width="16" height="16" viewBox="0 0 24 24" stroke-width="2"><path d="m5 13 4 4L19 7"/></svg>
+          Save employee
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function tog(){
+  const r = document.documentElement;
+  const dark = r.dataset.theme === 'dark';
+  r.dataset.theme = dark ? 'light' : 'dark';
+  document.getElementById('ti').innerHTML = dark
+    ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+}
+</script>
+</body>
+</html>
