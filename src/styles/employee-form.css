@@ -163,6 +163,74 @@
 }
 .ef-addrow svg { width: 15px; height: 15px; stroke-width: 2; }
 
+/* ══════════ DOCUMENTS ══════════
+   New record: one bordered fieldset per document. Existing record: a read-only
+   list with each kind's history folded away. The renewal dialog reuses the
+   Operations dialog (`.op-dialog*`, `.op-field*`) in operations.css. */
+
+.ef-docs { display: grid; gap: 14px; }
+.ef-doc {
+  position: relative; margin: 0; min-inline-size: 0;
+  border: 1px solid var(--line); border-radius: var(--r-4xl);
+  padding: 18px 20px 20px;
+}
+.ef-doc > legend {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--o); background: var(--tint);
+  padding: 4px 10px; border-radius: var(--r-pill);
+}
+.ef-doc-remove {
+  position: absolute; top: 14px; right: 16px;
+  font: 500 12.5px var(--font-inter); color: var(--ink-3);
+  background: none; border: 0; padding: 0; cursor: pointer; transition: color .2s;
+}
+.ef-doc-remove:hover { color: var(--bad); }
+
+.ef-doc-warn {
+  display: flex; gap: 9px; align-items: flex-start; margin-top: 14px;
+  padding: 12px 14px; border-radius: var(--r-2xl);
+  background: var(--count-alert-bg); color: var(--warn);
+  font-size: 12.5px; line-height: 1.5;
+}
+.ef-doc-warn svg { width: 15px; height: 15px; flex: none; margin-top: 1px; stroke-width: 2; }
+.ef-doc-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+.ef-doc-list { border: 1px solid var(--line); border-radius: var(--r-4xl); overflow: hidden; margin: 0; }
+.ef-doc-row {
+  display: grid; grid-template-columns: 150px 1fr; align-items: start;
+  border-bottom: 1px solid var(--line);
+}
+.ef-doc-row:last-child { border-bottom: 0; }
+.ef-doc-row dt {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3); padding: 16px; background: var(--surface-2); align-self: stretch;
+}
+.ef-doc-row dd {
+  margin: 0; padding: 13px 16px;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px;
+}
+.ef-doc-row dd > b { font: 500 13.5px var(--font-mono); color: var(--ink); }
+.ef-doc-dates { font-size: 13px; color: var(--ink-2); }
+.ef-doc-renew {
+  margin-left: auto; font: 500 13px var(--font-inter); color: var(--o);
+  background: none; border: 0; padding: 0; cursor: pointer;
+}
+.ef-doc-renew:hover { text-decoration: underline; }
+
+.ef-doc-history { flex-basis: 100%; order: 1; font-size: 12.5px; color: var(--ink-3); }
+.ef-doc-history summary { cursor: pointer; width: max-content; transition: color .2s; }
+.ef-doc-history summary:hover { color: var(--ink-2); }
+.ef-doc-history ul { list-style: none; margin: 8px 0 2px; padding: 0 0 0 12px; border-left: 2px solid var(--line); }
+.ef-doc-history li { display: flex; gap: 14px; padding: 3px 0; }
+.ef-doc-history .mono { font: 500 12px var(--font-mono); color: var(--ink-2); min-width: 120px; }
+
+.ef-doc-note { margin-top: 12px; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+
+@media (max-width: 860px) {
+  .ef-doc-row { grid-template-columns: 1fr; }
+  .ef-doc-row dt { padding: 10px 16px; }
+}
+
 /* ══════════ PHOTO ══════════ */
 
 .ef-photo {

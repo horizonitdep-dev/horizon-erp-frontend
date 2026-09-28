@@ -1,3 +1,5 @@
+import type { EmployeeDocument } from '@/features/employees/types';
+
 /**
  * The Operations module's own types. Nothing here redeclares a subset inline.
  *
@@ -99,8 +101,8 @@ export interface Worker {
   /** The labour file number, null until the visa has been processed. */
   fileNo: string | null;
   name: string;
-  passportNumber: string;
-  visaType: string;
+  /** Current documents only — the passport and visa are read out of these. */
+  documents: EmployeeDocument[];
   nationality: string;
   employmentStatus: 'ACTIVE' | 'CANCELLED';
   trade: { id: string; name: string; category: TradeCategory } | null;

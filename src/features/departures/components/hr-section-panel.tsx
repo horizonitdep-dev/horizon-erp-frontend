@@ -7,6 +7,7 @@ import { ACCESS } from '@/core/config/access';
 import { EM_DASH, formatDate } from '@/lib/format';
 import { useCanAccess } from '@/features/auth/components/access-gate';
 import { EfChoice, EfInput } from '@/features/employees/components/employee-form-fields';
+import { currentOfKind, currentVisa } from '@/features/employees/lib/documents';
 import { useSaveHrSection } from '../hooks/use-departures';
 import {
   hrSectionSchema,
@@ -81,8 +82,15 @@ export function HrSectionPanel({ departure, frozen }: { departure: Departure; fr
           <ReadOnly label="Employee's name" value={employee.name} />
           <ReadOnly label="Date of joining" value={formatDate(employee.joiningDate)} />
           <ReadOnly label="Designation" value={employee.trade?.name ?? null} />
-          <ReadOnly label="Emirates ID No" value={employee.emiratesIdNumber} mono />
-          <ReadOnly label="Visa expiry date" value={formatDate(employee.visaExpiryDate)} />
+          <ReadOnly
+            label="Emirates ID No"
+            value={currentOfKind(employee.documents, 'EMIRATES_ID')?.number ?? null}
+            mono
+          />
+          <ReadOnly
+            label="Visa expiry date"
+            value={formatDate(currentVisa(employee.documents)?.expiresAt)}
+          />
         </dl>
         <p className="dp-note">From the employee record — edit it there.</p>
       </div>

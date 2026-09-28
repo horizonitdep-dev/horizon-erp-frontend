@@ -11,6 +11,7 @@ import { ChevronDownIcon } from '@/components/ui/icons';
 import { ErrorState, Skeleton } from '@/components/ui/states';
 import { EM_DASH, formatDate } from '@/lib/format';
 import { AccessGate, useCanAccess } from '@/features/auth/components/access-gate';
+import { currentOfKind, currentVisaType, visaLabel } from '@/features/employees/lib/documents';
 import { useUndoMove, useWorker } from '../hooks/use-operations';
 import { duration, placementDates } from '../lib/format';
 import {
@@ -67,6 +68,7 @@ export function WorkerDetail({ workerId }: { workerId: string }) {
 
   const worker = query.data;
   const previous = worker.history.find((p) => p.id !== worker.current?.id) ?? null;
+  const visaType = currentVisaType(worker.documents);
 
   return (
     <>
@@ -148,9 +150,13 @@ export function WorkerDetail({ workerId }: { workerId: string }) {
                 <Fact label="Name" value={worker.name} />
                 <Fact label="Employee code" value={worker.employeeCode} mono />
                 <Fact label="File number" value={worker.fileNo} mono />
-                <Fact label="Passport" value={worker.passportNumber} mono />
+                <Fact
+                  label="Passport"
+                  value={currentOfKind(worker.documents, 'PASSPORT')?.number}
+                  mono
+                />
                 <Fact label="Trade" value={worker.trade?.name} />
-                <Fact label="Visa type" value={worker.visaType} />
+                <Fact label="Visa type" value={visaType ? visaLabel(visaType) : null} />
                 <Fact label="Nationality" value={worker.nationality} />
                 <Fact
                   label="Last rejoin"

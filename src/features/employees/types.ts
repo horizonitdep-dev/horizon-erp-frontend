@@ -165,7 +165,7 @@ export interface EmployeePayload {
 /**
  * The record as returned. `employmentStatus` and `visaStatus` are server-owned;
  * `visaStatus` is optional because the response schema is not documented in the
- * OpenAPI spec — where it is absent the UI derives it from `visaExpiryDate`.
+ * OpenAPI spec — where it is absent the UI derives it from the current visa's `expiresAt`.
  */
 export interface Employee extends EmployeePayload {
   id: string;

@@ -3,12 +3,18 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useFieldArray, useForm, useWatch, type Control } from 'react-hook-form';
+import {
+  useFieldArray,
+  useForm,
+  useWatch,
+  type Control,
+  type FieldPath,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { routes } from '@/core/config/routes';
 import { fieldErrors } from '@/core/api/unwrap';
 import { CheckIcon, ChevronDownIcon, PlusIcon } from '@/components/ui/icons';
-import { EM_DASH, formatDate } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { useCreateEmployee, useUpdateEmployee } from '../hooks/use-employee-mutations';
 import { useGroupedTrades, useTrades } from '@/core/reference/use-trades';
 import { useEmployeeOptions } from '../hooks/use-employees';
@@ -24,6 +30,7 @@ import {
   GENDERS,
   MARITAL_STATUSES,
   type Employee,
+  type EmployeeDocumentPayload,
   type EmployeePayload,
 } from '../types';
 import { currentOfKind } from '../lib/documents';
@@ -81,8 +88,12 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
     }
   }, [mutation.error, setError]);
 
+  // Documents go out on create only. PATCH rejects them: on an existing record
+  // a renewal is its own POST, so a save can never rewrite a document's history.
   const onSubmit = handleSubmit((values) => {
-    mutation.mutate(toPayload(values));
+    const payload = toPayload(values);
+    if (isEdit) update.mutate(payload);
+    else create.mutate({ ...payload, documents: values.documents.map(toDocumentPayload) });
   });
 
   const onCancel = () => {
@@ -518,7 +529,7 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
           </section>
         </div>
 
-        <Rail control={control} />
+        <Rail control={control} employee={employee} />
       </div>
 
       <div className="actionbar">
@@ -540,20 +551,32 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
 
 /* ══════════ RAIL ══════════ */
 
-function Rail({ control }: { control: Control<EmployeeFormValues> }) {
+function Rail({
+  control,
+  employee,
+}: {
+  control: Control<EmployeeFormValues>;
+  employee: Employee | undefined;
+}) {
   const values = useWatch({ control });
   const { data: trades } = useTrades();
   const tradeName = trades?.find((t) => t.id === values.tradeId)?.name;
+
+  // A new record previews what is being typed; an existing one what it holds,
+  // since its documents are not in the form at all.
+  const expiryOf = (kind: 'VISA' | 'PASSPORT') =>
+    employee
+      ? currentOfKind(employee.documents, kind)?.expiresAt
+      : values.documents?.find((d) => d?.kind === kind)?.expiresAt;
+  const visaExpiry = expiryOf('VISA');
+  const passportExpiry = expiryOf('PASSPORT');
 
   const preview: { k: string; v: string | undefined }[] = [
     { k: 'File number', v: values.fileNo || undefined },
     { k: 'Designation', v: tradeName },
     { k: 'Department', v: values.department },
-    { k: 'Visa expiry', v: values.visaExpiryDate ? formatDate(values.visaExpiryDate) : undefined },
-    {
-      k: 'Passport valid until',
-      v: values.passportValidUntil ? formatDate(values.passportValidUntil) : undefined,
-    },
+    { k: 'Visa expiry', v: visaExpiry ? formatDate(visaExpiry) : undefined },
+    { k: 'Passport valid until', v: passportExpiry ? formatDate(passportExpiry) : undefined },
   ];
 
   const checks = [
@@ -567,11 +590,7 @@ function Rail({ control }: { control: Control<EmployeeFormValues> }) {
         values.joiningDate &&
         values.contractStart &&
         values.contractEnd &&
-        values.visaType &&
-        values.visaIssueDate &&
-        values.visaExpiryDate &&
-        values.emiratesIdNumber &&
-        values.passportNumber
+        (employee ? employee.documents.length > 0 : missingDocumentFields(values.documents) === 0)
       ),
     },
     {
@@ -658,7 +677,6 @@ function RequiredCount({ control }: { control: Control<EmployeeFormValues> }) {
   const conditional: (keyof EmployeeFormValues)[] = [];
   if (values.drivingLicense === 'YES') conditional.push('drivingLicenseValidUntil');
   if (values.drivingLicense === 'OTHER') conditional.push('drivingLicenseOther');
-  if (values.visaType === 'OTHER') conditional.push('visaTypeOther');
   if (values.maritalStatus === 'OTHER') conditional.push('maritalStatusOther');
 
   const left = [...REQUIRED_FIELDS, ...conditional].filter((key) => {
@@ -669,7 +687,7 @@ function RequiredCount({ control }: { control: Control<EmployeeFormValues> }) {
   const emergencyMissing = !(values.emergencyContacts ?? []).some(
     (c) => !!c?.name?.trim() && !!c?.contactNo?.trim(),
   );
-  const total = left + (emergencyMissing ? 1 : 0);
+  const total = left + missingDocumentFields(values.documents) + (emergencyMissing ? 1 : 0);
 
   if (total === 0) {
     return (
@@ -698,16 +716,6 @@ const REQUIRED_FIELDS = [
   'joiningDate',
   'contractStart',
   'contractEnd',
-  'visaType',
-  'visaIssueDate',
-  'visaExpiryDate',
-  'emiratesIdNumber',
-  'emiratesIdIssueDate',
-  'emiratesIdExpiryDate',
-  'passportNumber',
-  'passportCountry',
-  'passportIssueDate',
-  'passportValidUntil',
   'dateOfBirth',
   'nationality',
   'religion',
@@ -723,10 +731,7 @@ const REQUIRED_FIELDS = [
 
 const FORM_FIELDS: readonly string[] = [
   ...REQUIRED_FIELDS,
-  'visaTypeOther',
-  'visitVisaNumber',
-  'visitVisaIssueDate',
-  'visitVisaExpiryDate',
+  'documents',
   'maritalStatusOther',
   'numberOfChildren',
   'drivingLicenseOther',
@@ -735,32 +740,39 @@ const FORM_FIELDS: readonly string[] = [
   'emergencyContacts',
 ];
 
-function isFormField(field: string): field is keyof EmployeeFormValues {
-  return FORM_FIELDS.includes(field);
+/** A server error on `documents.1.number` lands on that row's input. */
+function isFormField(field: string): field is FieldPath<EmployeeFormValues> {
+  return FORM_FIELDS.includes(field) || /^documents\.\d+\.\w+$/.test(field);
+}
+
+/**
+ * Required document inputs still empty, mirroring employeeDocumentSchema's
+ * rules. An existing record's array is empty, so this is zero on edit.
+ */
+function missingDocumentFields(
+  documents: Partial<EmployeeFormValues['documents'][number]>[] | undefined,
+): number {
+  let missing = 0;
+  for (const d of documents ?? []) {
+    const needed = [d.issuedAt, d.expiresAt];
+    if (d.kind !== 'VISA') needed.push(d.number);
+    if (d.kind === 'VISA') needed.push(d.visaType);
+    if (d.kind === 'VISA' && d.visaType === 'OTHER') needed.push(d.visaTypeOther);
+    if (d.kind === 'PASSPORT') needed.push(d.issuingCountry);
+    missing += needed.filter((value) => !value?.trim()).length;
+  }
+  return missing;
 }
 
 /**
  * The four family rows are fixed and positional — one per role, in role order.
  *
- * Documents are only ever edited on a NEW record. On an existing one the panel
- * is read-only and a renewal posts on its own, so the array is seeded from
- * what he holds purely to keep the form's shape valid — it is never submitted.
+ * Documents are only ever entered on a NEW record. On an existing one the panel
+ * is read-only and a renewal posts on its own, so the array starts empty: an
+ * old document with a field the rules now require can never block a save.
  */
 function toFormValues(employee: Employee | undefined): EmployeeFormValues {
-  const documents: EmployeeFormValues['documents'] = employee
-    ? HR_DOCUMENT_KINDS.map((kind) => currentOfKind(employee.documents, kind))
-        .filter((d): d is NonNullable<typeof d> => !!d)
-        .map((d) => ({
-          kind: d.kind as EmployeeFormValues['documents'][number]['kind'],
-          number: d.number ?? '',
-          visaType: d.visaType ?? undefined,
-          visaTypeOther: d.visaTypeOther ?? '',
-          issuingCountry: d.issuingCountry ?? '',
-          issuedAt: day(d.issuedAt),
-          expiresAt: day(d.expiresAt),
-          remark: d.remark ?? '',
-        }))
-    : BLANK_DOCUMENTS;
+  const documents: EmployeeFormValues['documents'] = employee ? [] : BLANK_DOCUMENTS;
 
   const familyContacts = FAMILY_ROLES.map((role) => {
     const existing = employee?.familyContacts?.find((c) => c.role === role);
@@ -819,18 +831,19 @@ function toFormValues(employee: Employee | undefined): EmployeeFormValues {
  * Drop empty optional strings rather than sending "" — the API treats an empty
  * string as a value, and a blank family row should not become a contact.
  */
-function toPayload(values: EmployeeFormValues): EmployeePayload {
+function toPayload(values: EmployeeFormValues): Omit<EmployeePayload, 'documents'> {
   const familyContacts = values.familyContacts.filter(
     (c) => c.name?.trim() || c.location?.trim() || c.contactNo?.trim(),
   );
 
   // numberOfChildren is re-added below as a number, so it is dropped here.
-  const { numberOfChildren: _omit, ...rest } = values;
+  // Documents are added by the caller, and on create only.
+  const { numberOfChildren: _omit, documents: _documents, ...rest } = values;
   void _omit;
-  const payload: EmployeePayload = {
+  void _documents;
+  const payload: Omit<EmployeePayload, 'documents'> = {
     ...rest,
     familyContacts,
-    documents: values.documents.map(toDocumentPayload),
     ...blank('maritalStatusOther', values.maritalStatusOther),
     ...blank('drivingLicenseOther', values.drivingLicenseOther),
     ...blank('drivingLicenseValidUntil', values.drivingLicenseValidUntil),
