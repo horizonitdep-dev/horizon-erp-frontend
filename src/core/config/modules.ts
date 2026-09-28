@@ -1,5 +1,4 @@
-import type { UserRole } from './roles';
-import { isExecutive } from './roles';
+import { isExecutive, type AccessSubject, type Department } from './access';
 import { routes } from './routes';
 
 /**
@@ -21,8 +20,8 @@ export type ModuleDefinition = {
   description: string;
   /** Built this sprint. Inactive modules render visible but do not navigate. */
   active: boolean;
-  /** Roles that see this module at all. Executives see everything. */
-  roles: readonly UserRole[];
+  /** Departments that see this module at all. Executives see everything. */
+  departments: readonly Department[];
 };
 
 export const MODULES: readonly ModuleDefinition[] = [
@@ -32,7 +31,7 @@ export const MODULES: readonly ModuleDefinition[] = [
     href: routes.overview,
     description: 'Everything across the group, in one place.',
     active: true,
-    roles: ['CHAIRMAN', 'MD', 'HR', 'BUSINESS', 'OPERATIONS', 'FINANCE', 'IT'],
+    departments: ['EXECUTIVE', 'BUSINESS', 'OPERATIONS', 'HR_ADMIN', 'PR', 'ACCOUNTS', 'IT'],
   },
   {
     id: 'hr',
@@ -40,7 +39,9 @@ export const MODULES: readonly ModuleDefinition[] = [
     href: routes.hr.employees,
     description: 'People, documents and deployment.',
     active: true,
-    roles: ['CHAIRMAN', 'MD', 'HR'],
+    // Operations too: their officers transcribe airport clearance on HR's
+    // departure form, and need a way in without typing a URL.
+    departments: ['HR_ADMIN', 'OPERATIONS'],
   },
   {
     id: 'business',
@@ -48,15 +49,15 @@ export const MODULES: readonly ModuleDefinition[] = [
     href: '/business',
     description: 'Clients, contracts and manager pipelines.',
     active: false,
-    roles: ['CHAIRMAN', 'MD', 'BUSINESS'],
+    departments: ['BUSINESS'],
   },
   {
     id: 'operations',
     label: 'Operations',
-    href: '/operations',
+    href: routes.operations.master,
     description: 'Sites, camps and daily deployment.',
-    active: false,
-    roles: ['CHAIRMAN', 'MD', 'OPERATIONS'],
+    active: true,
+    departments: ['OPERATIONS'],
   },
   {
     id: 'finance',
@@ -64,7 +65,8 @@ export const MODULES: readonly ModuleDefinition[] = [
     href: '/finance',
     description: 'Invoicing, payroll and margins.',
     active: false,
-    roles: ['CHAIRMAN', 'MD', 'FINANCE'],
+    // The chart calls the department Accounts; the module keeps its Finance tab.
+    departments: ['ACCOUNTS'],
   },
   {
     id: 'it',
@@ -72,15 +74,20 @@ export const MODULES: readonly ModuleDefinition[] = [
     href: '/it',
     description: 'Assets, accounts and access.',
     active: false,
-    roles: ['CHAIRMAN', 'MD', 'IT'],
+    departments: ['IT'],
   },
 ];
 
-/** Modules a role may see. Executives see all six. */
-export function modulesForRole(role: UserRole | null | undefined): readonly ModuleDefinition[] {
-  if (isExecutive(role)) return MODULES;
-  if (!role) return MODULES.filter((m) => m.id === 'overview');
-  return MODULES.filter((m) => m.roles.includes(role));
+/**
+ * Modules a user may see. Executives see all six.
+ *
+ * ⚠️ PR is a real department with no module of its own (open question), so PR
+ * staff see Overview only.
+ */
+export function modulesFor(user: AccessSubject | null | undefined): readonly ModuleDefinition[] {
+  if (isExecutive(user)) return MODULES;
+  if (!user) return MODULES.filter((m) => m.id === 'overview');
+  return MODULES.filter((m) => m.departments.includes(user.department));
 }
 
 /** Which module a pathname belongs to, for tab highlighting. */

@@ -1,33 +1,33 @@
 'use client';
 
-import type { UserRole } from '@/core/config/roles';
+import { approvalSlot } from '@/core/config/access';
 import { CheckIcon } from '@/components/ui/icons';
 import { formatDate } from '@/lib/format';
-import { useHasRole } from '@/features/auth/components/role-gate';
+import { useSession } from '@/features/auth/hooks/use-session';
 import { useApproveDeparture } from '../hooks/use-departures';
 import type { Actor, Departure } from '../types';
 
-/** HR signs the HR Manager box. MD — or the Chairman — signs the Managing Director box. */
-const HR_SLOT: readonly UserRole[] = ['HR'];
-const MD_SLOT: readonly UserRole[] = ['MD', 'CHAIRMAN'];
-
 /**
- * Panel 3 — the two signature boxes at the foot of the form, side by side.
- * The server picks the slot from the caller's role; each card only offers the
- * button to someone who can fill it.
+ * Panel 3 — the two signature boxes at the foot of the form, side by side. Both
+ * open only once the Operations Manager has approved the clearance section. The
+ * server picks the slot from the caller's department and level — an HR & Admin
+ * head signs HR Manager, an executive signs Managing Director — and each card
+ * only offers the button to someone who can fill it.
  */
 export function ApprovalsPanel({ departure }: { departure: Departure }) {
   const approve = useApproveDeparture(departure.id);
-  const isHr = useHasRole(HR_SLOT);
-  const isMd = useHasRole(MD_SLOT);
+  const { user } = useSession();
+  const slot = approvalSlot(user);
+  const isHr = slot === 'HR';
+  const isMd = slot === 'MD';
 
   const voided = !!departure.voidedAt;
-  const notReady = !departure.clearanceComplete;
+  const notReady = !departure.clearanceApprovedAt;
 
   const blockedReason = voided
     ? 'Voided — no approval needed.'
     : notReady
-      ? 'Available once airport clearance is recorded.'
+      ? 'Available once the Operations Manager has approved airport clearance.'
       : null;
 
   return (

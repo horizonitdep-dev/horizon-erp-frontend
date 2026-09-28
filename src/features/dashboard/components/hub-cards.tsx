@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { modulesForRole, type ModuleDefinition } from '@/core/config/modules';
+import { modulesFor, type ModuleDefinition } from '@/core/config/modules';
 import { DEPARTMENT_ICONS } from '@/components/ui/icons';
 import { EM_DASH, formatCount, greeting, firstName } from '@/lib/format';
 import { useSession } from '@/features/auth/hooks/use-session';
@@ -14,10 +14,10 @@ import type { DashboardSummary } from '../types';
  * hover lift and "Coming soon" in the stat row.
  */
 export function HubCards() {
-  const { user, role } = useSession();
+  const { user } = useSession();
   const { data, isPending, isError } = useDashboard('month');
 
-  const modules = modulesForRole(role);
+  const modules = modulesFor(user);
   const name = firstName(user?.fullName);
 
   return (

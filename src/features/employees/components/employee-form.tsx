@@ -10,6 +10,7 @@ import { fieldErrors } from '@/core/api/unwrap';
 import { CheckIcon, ChevronDownIcon, PlusIcon } from '@/components/ui/icons';
 import { EM_DASH, formatDate } from '@/lib/format';
 import { useCreateEmployee, useUpdateEmployee } from '../hooks/use-employee-mutations';
+import { useGroupedTrades, useTrades } from '@/core/reference/use-trades';
 import { useEmployeeOptions } from '../hooks/use-employees';
 import {
   createEmployeeSchema,
@@ -22,12 +23,12 @@ import {
   FAMILY_ROLES,
   GENDERS,
   MARITAL_STATUSES,
-  VISA_TYPE_LABELS,
-  VISA_TYPES,
   type Employee,
   type EmployeePayload,
 } from '../types';
+import { currentOfKind } from '../lib/documents';
 import { CancelEmployment } from './cancel-employment';
+import { BLANK_DOCUMENTS, DocumentsFieldArray, DocumentsPanel } from './employee-documents';
 import { EfChoice, EfInput, EfSelect, EfTextarea } from './employee-form-fields';
 
 /**
@@ -46,6 +47,8 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
   const router = useRouter();
   const isEdit = !!employee;
   const options = useEmployeeOptions();
+  // Trades are shared reference data, so they come from core/, not from HR.
+  const { groups: tradeGroups } = useGroupedTrades();
 
   const create = useCreateEmployee();
   const update = useUpdateEmployee(employee?.id ?? '');
@@ -65,7 +68,6 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
   const family = useFieldArray({ control, name: 'familyContacts' });
   const emergency = useFieldArray({ control, name: 'emergencyContacts' });
 
-  const visaType = useWatch({ control, name: 'visaType' });
   const maritalStatus = useWatch({ control, name: 'maritalStatus' });
   const drivingLicense = useWatch({ control, name: 'drivingLicense' });
 
@@ -138,25 +140,34 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
                   error={errors.name}
                   {...register('name')}
                 />
+                {/*
+                  No Employee I.D. field: HIRS issues that code on save. The
+                  labour file number is a different identifier which only
+                  exists once the visa has been processed, so it is optional.
+                */}
                 <EfInput
-                  label="Employee I.D."
-                  required
+                  label="File number"
                   className="mono-field"
-                  placeholder="HIRS-04213"
-                  error={errors.employeeCode}
-                  {...register('employeeCode')}
+                  optionalNote="once the visa is processed"
+                  placeholder="2289"
+                  error={errors.fileNo}
+                  {...register('fileNo')}
                 />
                 <EfSelect
                   label="Designation"
                   required
-                  placeholder="Select designation"
-                  error={errors.designation}
-                  {...register('designation')}
+                  placeholder="Select a trade"
+                  error={errors.tradeId}
+                  {...register('tradeId')}
                 >
-                  {options.data?.designations.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
+                  {tradeGroups.map((group) => (
+                    <optgroup key={group.category} label={group.label}>
+                      {group.trades.map((trade) => (
+                        <option key={trade.id} value={trade.id}>
+                          {trade.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </EfSelect>
                 <EfSelect
@@ -205,140 +216,19 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
               </div>
             </div>
 
+            {/*
+              Visa, Emirates ID and passport are dated documents with history,
+              not fourteen fields. On a new record HR enters what they have; on
+              an existing one they are read-only here and a renewal is its own
+              action, so the history cannot be quietly rewritten by a save.
+            */}
             <div className="ef-pbody">
-              <p className="ef-grp">Visa</p>
-              <div className="ef-grid">
-                <EfChoice
-                  className="ef-span"
-                  label="Type of visa"
-                  required
-                  options={VISA_TYPES}
-                  labels={VISA_TYPE_LABELS}
-                  error={errors.visaType}
-                  {...register('visaType')}
-                >
-                  {visaType === 'OTHER' ? (
-                    <input
-                      className="ef-other"
-                      placeholder="Specify"
-                      aria-label="Specify visa type"
-                      {...register('visaTypeOther')}
-                    />
-                  ) : null}
-                </EfChoice>
-                {errors.visaTypeOther?.message ? (
-                  <p className="field-error ef-span" role="alert">
-                    {errors.visaTypeOther.message}
-                  </p>
-                ) : null}
-                <EfInput
-                  label="Issue date"
-                  required
-                  type="date"
-                  error={errors.visaIssueDate}
-                  {...register('visaIssueDate')}
-                />
-                <EfInput
-                  label="Expiry date"
-                  required
-                  type="date"
-                  error={errors.visaExpiryDate}
-                  {...register('visaExpiryDate')}
-                />
-              </div>
-            </div>
-
-            <div className="ef-pbody">
-              <p className="ef-grp">
-                Visit visa <span className="tag">if applicable</span>
-              </p>
-              <div className="ef-grid-3">
-                <EfInput
-                  label="Visit visa number"
-                  placeholder={EM_DASH}
-                  error={errors.visitVisaNumber}
-                  {...register('visitVisaNumber')}
-                />
-                <EfInput
-                  label="Issue date"
-                  type="date"
-                  error={errors.visitVisaIssueDate}
-                  {...register('visitVisaIssueDate')}
-                />
-                <EfInput
-                  label="Expiry date"
-                  type="date"
-                  error={errors.visitVisaExpiryDate}
-                  {...register('visitVisaExpiryDate')}
-                />
-              </div>
-            </div>
-
-            <div className="ef-pbody">
-              <p className="ef-grp">Emirates I.D.</p>
-              <div className="ef-grid-3">
-                <EfInput
-                  label="Emirates I.D. number"
-                  required
-                  placeholder="784-0000-0000000-0"
-                  error={errors.emiratesIdNumber}
-                  {...register('emiratesIdNumber')}
-                />
-                <EfInput
-                  label="Issue date"
-                  required
-                  type="date"
-                  error={errors.emiratesIdIssueDate}
-                  {...register('emiratesIdIssueDate')}
-                />
-                <EfInput
-                  label="Expiry date"
-                  required
-                  type="date"
-                  error={errors.emiratesIdExpiryDate}
-                  {...register('emiratesIdExpiryDate')}
-                />
-              </div>
-            </div>
-
-            <div className="ef-pbody">
-              <p className="ef-grp">Passport</p>
-              <div className="ef-grid">
-                <EfInput
-                  label="Passport number"
-                  required
-                  placeholder="P1234567"
-                  error={errors.passportNumber}
-                  {...register('passportNumber')}
-                />
-                <EfSelect
-                  label="Issuing country"
-                  required
-                  placeholder="Select country"
-                  error={errors.passportCountry}
-                  {...register('passportCountry')}
-                >
-                  {options.data?.countries.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </EfSelect>
-                <EfInput
-                  label="Issue date"
-                  required
-                  type="date"
-                  error={errors.passportIssueDate}
-                  {...register('passportIssueDate')}
-                />
-                <EfInput
-                  label="Valid until"
-                  required
-                  type="date"
-                  error={errors.passportValidUntil}
-                  {...register('passportValidUntil')}
-                />
-              </div>
+              <p className="ef-grp">Documents</p>
+              {isEdit ? (
+                <DocumentsPanel employee={employee} />
+              ) : (
+                <DocumentsFieldArray control={control} register={register} errors={errors} />
+              )}
             </div>
           </section>
 
@@ -476,9 +366,11 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
                     />
                   ) : null}
                 </EfChoice>
+                {/* Required only when they hold one — see the schema's refine. */}
                 <EfInput
                   label="License valid until"
                   type="date"
+                  required={drivingLicense === 'YES'}
                   error={errors.drivingLicenseValidUntil}
                   {...register('drivingLicenseValidUntil')}
                 />
@@ -629,7 +521,7 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
         <Rail control={control} />
       </div>
 
-      <div className="ef-actions">
+      <div className="actionbar">
         <div className="inner">
           <RequiredCount control={control} />
           <div className="right">
@@ -650,10 +542,12 @@ export function EmployeeForm({ employee }: { employee?: Employee }) {
 
 function Rail({ control }: { control: Control<EmployeeFormValues> }) {
   const values = useWatch({ control });
+  const { data: trades } = useTrades();
+  const tradeName = trades?.find((t) => t.id === values.tradeId)?.name;
 
   const preview: { k: string; v: string | undefined }[] = [
-    { k: 'Employee I.D.', v: values.employeeCode },
-    { k: 'Designation', v: values.designation },
+    { k: 'File number', v: values.fileNo || undefined },
+    { k: 'Designation', v: tradeName },
     { k: 'Department', v: values.department },
     { k: 'Visa expiry', v: values.visaExpiryDate ? formatDate(values.visaExpiryDate) : undefined },
     {
@@ -667,8 +561,7 @@ function Rail({ control }: { control: Control<EmployeeFormValues> }) {
       label: 'Part 1 — job information',
       done: !!(
         values.name &&
-        values.employeeCode &&
-        values.designation &&
+        values.tradeId &&
         values.department &&
         values.reportingManager &&
         values.joiningDate &&
@@ -759,7 +652,16 @@ function Rail({ control }: { control: Control<EmployeeFormValues> }) {
 
 function RequiredCount({ control }: { control: Control<EmployeeFormValues> }) {
   const values = useWatch({ control });
-  const left = REQUIRED_FIELDS.filter((key) => {
+
+  // Conditionally required fields join the list only once their condition
+  // holds, so the count never asks for something the form is not showing.
+  const conditional: (keyof EmployeeFormValues)[] = [];
+  if (values.drivingLicense === 'YES') conditional.push('drivingLicenseValidUntil');
+  if (values.drivingLicense === 'OTHER') conditional.push('drivingLicenseOther');
+  if (values.visaType === 'OTHER') conditional.push('visaTypeOther');
+  if (values.maritalStatus === 'OTHER') conditional.push('maritalStatusOther');
+
+  const left = [...REQUIRED_FIELDS, ...conditional].filter((key) => {
     const value = values[key];
     return value === undefined || value === null || value === '';
   }).length;
@@ -789,9 +691,8 @@ function RequiredCount({ control }: { control: Control<EmployeeFormValues> }) {
 /* ══════════ MAPPING ══════════ */
 
 const REQUIRED_FIELDS = [
-  'employeeCode',
   'name',
-  'designation',
+  'tradeId',
   'department',
   'reportingManager',
   'joiningDate',
@@ -838,8 +739,29 @@ function isFormField(field: string): field is keyof EmployeeFormValues {
   return FORM_FIELDS.includes(field);
 }
 
-/** The four family rows are fixed and positional — one per role, in role order. */
+/**
+ * The four family rows are fixed and positional — one per role, in role order.
+ *
+ * Documents are only ever edited on a NEW record. On an existing one the panel
+ * is read-only and a renewal posts on its own, so the array is seeded from
+ * what he holds purely to keep the form's shape valid — it is never submitted.
+ */
 function toFormValues(employee: Employee | undefined): EmployeeFormValues {
+  const documents: EmployeeFormValues['documents'] = employee
+    ? HR_DOCUMENT_KINDS.map((kind) => currentOfKind(employee.documents, kind))
+        .filter((d): d is NonNullable<typeof d> => !!d)
+        .map((d) => ({
+          kind: d.kind as EmployeeFormValues['documents'][number]['kind'],
+          number: d.number ?? '',
+          visaType: d.visaType ?? undefined,
+          visaTypeOther: d.visaTypeOther ?? '',
+          issuingCountry: d.issuingCountry ?? '',
+          issuedAt: day(d.issuedAt),
+          expiresAt: day(d.expiresAt),
+          remark: d.remark ?? '',
+        }))
+    : BLANK_DOCUMENTS;
+
   const familyContacts = FAMILY_ROLES.map((role) => {
     const existing = employee?.familyContacts?.find((c) => c.role === role);
     return {
@@ -861,28 +783,15 @@ function toFormValues(employee: Employee | undefined): EmployeeFormValues {
       : [{ name: '', address: '', relation: '', contactNo: '' }];
 
   return {
-    employeeCode: employee?.employeeCode ?? '',
+    fileNo: employee?.fileNo ?? '',
     name: employee?.name ?? '',
-    designation: employee?.designation ?? '',
+    tradeId: employee?.trade?.id ?? '',
     department: employee?.department ?? '',
     reportingManager: employee?.reportingManager ?? '',
     joiningDate: day(employee?.joiningDate),
     contractStart: day(employee?.contractStart),
     contractEnd: day(employee?.contractEnd),
-    visaType: employee?.visaType ?? 'EMPLOYMENT',
-    visaTypeOther: employee?.visaTypeOther ?? '',
-    visaIssueDate: day(employee?.visaIssueDate),
-    visaExpiryDate: day(employee?.visaExpiryDate),
-    visitVisaNumber: employee?.visitVisaNumber ?? '',
-    visitVisaIssueDate: day(employee?.visitVisaIssueDate),
-    visitVisaExpiryDate: day(employee?.visitVisaExpiryDate),
-    emiratesIdNumber: employee?.emiratesIdNumber ?? '',
-    emiratesIdIssueDate: day(employee?.emiratesIdIssueDate),
-    emiratesIdExpiryDate: day(employee?.emiratesIdExpiryDate),
-    passportNumber: employee?.passportNumber ?? '',
-    passportCountry: employee?.passportCountry ?? '',
-    passportIssueDate: day(employee?.passportIssueDate),
-    passportValidUntil: day(employee?.passportValidUntil),
+    documents,
     dateOfBirth: day(employee?.dateOfBirth),
     nationality: employee?.nationality ?? '',
     religion: employee?.religion ?? '',
@@ -921,10 +830,7 @@ function toPayload(values: EmployeeFormValues): EmployeePayload {
   const payload: EmployeePayload = {
     ...rest,
     familyContacts,
-    ...blank('visaTypeOther', values.visaTypeOther),
-    ...blank('visitVisaNumber', values.visitVisaNumber),
-    ...blank('visitVisaIssueDate', values.visitVisaIssueDate),
-    ...blank('visitVisaExpiryDate', values.visitVisaExpiryDate),
+    documents: values.documents.map(toDocumentPayload),
     ...blank('maritalStatusOther', values.maritalStatusOther),
     ...blank('drivingLicenseOther', values.drivingLicenseOther),
     ...blank('drivingLicenseValidUntil', values.drivingLicenseValidUntil),
@@ -941,6 +847,25 @@ function toPayload(values: EmployeeFormValues): EmployeePayload {
 
 function blank<K extends string>(key: K, value: string | undefined) {
   return value?.trim() ? { [key]: value.trim() } : ({} as Record<K, never>);
+}
+
+/**
+ * Only the fields that kind of document actually has. Sending an empty string
+ * for a visa's `number` would record a blank number rather than none at all.
+ */
+function toDocumentPayload(
+  document: EmployeeFormValues['documents'][number],
+): EmployeeDocumentPayload {
+  return {
+    kind: document.kind,
+    issuedAt: document.issuedAt,
+    expiresAt: document.expiresAt,
+    ...blank('number', document.number),
+    ...(document.kind === 'VISA' && document.visaType ? { visaType: document.visaType } : {}),
+    ...(document.visaType === 'OTHER' ? blank('visaTypeOther', document.visaTypeOther) : {}),
+    ...(document.kind === 'PASSPORT' ? blank('issuingCountry', document.issuingCountry) : {}),
+    ...blank('remark', document.remark),
+  };
 }
 
 /** The API returns ISO datetimes; date inputs need a bare yyyy-mm-dd. */

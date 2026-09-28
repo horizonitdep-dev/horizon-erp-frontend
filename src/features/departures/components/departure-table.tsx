@@ -66,7 +66,7 @@ export function DepartureTable({
           );
         },
       }),
-      columnHelper.accessor((row) => row.employee.designation, {
+      columnHelper.accessor((row) => row.employee.trade?.name ?? null, {
         id: 'designation',
         header: 'Designation',
         enableSorting: false,

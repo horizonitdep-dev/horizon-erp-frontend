@@ -3,6 +3,8 @@ import { unwrap, type ApiEnvelope, type Paginated } from '@/core/api/unwrap';
 import type { Departure } from '@/features/departures/types';
 import type {
   Employee,
+  EmployeeDocument,
+  EmployeeDocumentPayload,
   EmployeeListParams,
   EmployeeOptions,
   EmployeePayload,
@@ -26,12 +28,38 @@ export async function createEmployee(payload: EmployeePayload): Promise<Employee
   return unwrap(res);
 }
 
-/** Contact arrays replace existing rows rather than merging — per the API. */
+/**
+ * Documents are NOT accepted here — the API rejects them. A renewal goes
+ * through addDocument below, so a save can never quietly rewrite history.
+ *
+ * Contact arrays replace existing rows rather than merging — per the API.
+ */
 export async function updateEmployee(
   id: string,
-  payload: Partial<EmployeePayload>,
+  payload: Partial<Omit<EmployeePayload, 'documents'>>,
 ): Promise<Employee> {
   const res = await api.patch<ApiEnvelope<Employee>>(`/hr/employees/${id}`, payload);
+  return unwrap(res);
+}
+
+/**
+ * Record a document, or a renewal of one. The server closes whichever it
+ * replaces, so nothing here needs to know which was current.
+ */
+export async function addDocument(
+  id: string,
+  payload: EmployeeDocumentPayload,
+): Promise<EmployeeDocument> {
+  const res = await api.post<ApiEnvelope<EmployeeDocument>>(
+    `/hr/employees/${id}/documents`,
+    payload,
+  );
+  return unwrap(res);
+}
+
+/** Every issue of every document, history included. */
+export async function listDocuments(id: string): Promise<EmployeeDocument[]> {
+  const res = await api.get<ApiEnvelope<EmployeeDocument[]>>(`/hr/employees/${id}/documents`);
   return unwrap(res);
 }
 

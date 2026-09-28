@@ -42,8 +42,10 @@
   border-left: 3px solid var(--dot-neutral);
   border-radius: var(--r-4xl); box-shadow: var(--sh-card);
 }
-.dp-banner[data-stage='AWAITING_DEPARTURE'],
+.dp-banner[data-stage='AWAITING_CLEARANCE'],
+.dp-banner[data-stage='CLEARANCE_SUBMITTED'],
 .dp-banner[data-stage='AWAITING_APPROVAL'] { border-left-color: var(--dot-warn); }
+.dp-banner[data-stage='CLEARANCE_REJECTED'] { border-left-color: var(--dot-bad); }
 .dp-banner[data-stage='COMPLETED'] { border-left-color: var(--dot-good); }
 .dp-banner-stage { display: grid; gap: 6px; flex: none; min-width: 170px; }
 .dp-banner-label {
@@ -112,6 +114,37 @@
 }
 .dp-foot .status { font-size: 13px; color: var(--ink-3); }
 .dp-foot-note { font-size: 13px; color: var(--ink-3); }
+.dp-foot-actions { display: flex; gap: 10px; margin-left: auto; }
+
+/* Sent back by the Operations Manager — the one thing to read first. */
+.dp-sentback {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px; border-radius: var(--r-2xl);
+  background: var(--surface-2); border: 1px solid var(--dot-bad);
+  font-size: 13.5px; line-height: 1.5; color: var(--ink-2);
+}
+.dp-sentback svg { flex: none; margin-top: 2px; stroke: var(--bad); }
+.dp-sentback b { color: var(--ink); font-weight: 600; }
+
+/* The Operations Manager's decision, at the foot of Part 2. */
+.dp-review {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+  padding: 18px 24px; border-top: 1px solid var(--line); background: var(--surface-2);
+}
+.dp-review-head h3 { font: 600 14px var(--font-sora); margin-bottom: 4px; }
+.dp-review-head p { font-size: 13px; color: var(--ink-3); line-height: 1.5; max-width: 52ch; }
+.dp-review-reject { display: grid; gap: 8px; flex: 1; min-width: 260px; }
+.dp-review-reject label {
+  font: 500 11px var(--font-inter); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.dp-review-reject textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--card); padding: 12px 14px; resize: vertical;
+  font: 400 14px var(--font-inter); color: var(--ink); outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.dp-review-reject textarea:focus { border-color: var(--o); box-shadow: var(--ring); }
 .dp-foot .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ══════════ APPROVALS ══════════ */

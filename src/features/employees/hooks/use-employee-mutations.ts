@@ -7,12 +7,19 @@ import { queryKeys } from '@/core/config/query-keys';
 import { routes } from '@/core/config/routes';
 import { apiMessage, statusOf } from '@/core/api/unwrap';
 import {
+  addDocument,
   cancelEmployee,
   createEmployee,
   reinstateEmployee,
   updateEmployee,
 } from '../api/employees.api';
-import type { Employee, EmployeePayload } from '../types';
+import { DOCUMENT_LABELS } from '../types';
+import type {
+  Employee,
+  EmployeeDocument,
+  EmployeeDocumentPayload,
+  EmployeePayload,
+} from '../types';
 
 /**
  * Every mutation shows a toast. A duplicate employee code comes back as a 409;
@@ -47,6 +54,27 @@ export function useUpdateEmployee(id: string) {
       router.push(routes.hr.employees);
     },
     onError: (error) => toast.error(saveError(error)),
+  });
+}
+
+/**
+ * Record a document, or a renewal of one.
+ *
+ * Invalidating the whole employees namespace is deliberate: a renewal changes
+ * the record, the list's visa-expiry column and the documents-expiring tile at
+ * once, and refreshing them one by one is how a stale date survives on screen.
+ */
+export function useAddDocument(id: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<EmployeeDocument, unknown, EmployeeDocumentPayload>({
+    mutationFn: (payload) => addDocument(id, payload),
+    onSuccess: (document) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
+      toast.success(`${DOCUMENT_LABELS[document.kind]} recorded`);
+    },
+    // The dialog keeps the error on screen next to the fields, so no toast —
+    // two messages for one failure reads as two failures.
   });
 }
 

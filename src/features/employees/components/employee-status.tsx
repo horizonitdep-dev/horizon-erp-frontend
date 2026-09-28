@@ -1,9 +1,11 @@
 import { visaState } from '@/core/config/visa';
 import { EM_DASH, formatDate } from '@/lib/format';
+import { currentVisa } from '../lib/documents';
 import { VISA_STATUS_LABELS, type Employee, type VisaStatus } from '../types';
 
 /**
- * The server derives `visaStatus` from `visaExpiryDate` and exposes the same
+ * The server derives `visaStatus` from the current visa's expiry and exposes
+ * the same
  * four buckets as a filter, so it is the authority. The response schema is not
  * documented in the OpenAPI spec, so where the field is absent this falls back
  * to the local thresholds in core/config/visa.ts — which produce the same
@@ -17,9 +19,17 @@ const VISA_DOT: Record<VisaStatus, string> = {
   EXPIRED: 'bad',
 };
 
-export function resolveVisaStatus(employee: Pick<Employee, 'visaStatus' | 'visaExpiryDate'>): VisaStatus | null {
+/** What these need: the server's verdict if it gave one, else the visa itself. */
+type WithVisa = Pick<Employee, 'visaStatus' | 'documents'>;
+
+/** The expiry of the visa he HOLDS. A renewed one is history, not his status. */
+function visaExpiry(employee: WithVisa): string | null {
+  return currentVisa(employee.documents)?.expiresAt ?? null;
+}
+
+export function resolveVisaStatus(employee: WithVisa): VisaStatus | null {
   if (employee.visaStatus) return employee.visaStatus;
-  switch (visaState(employee.visaExpiryDate)) {
+  switch (visaState(visaExpiry(employee))) {
     case 'expired':
       return 'EXPIRED';
     case 'urgent':
@@ -56,8 +66,10 @@ export function EmployeeStatus({ employee }: { employee: Employee }) {
 }
 
 /** Visa expiry date, coloured by how close it is. */
-export function VisaExpiry({ employee }: { employee: Pick<Employee, 'visaStatus' | 'visaExpiryDate'> }) {
-  if (!employee.visaExpiryDate) return <span className="expiry">{EM_DASH}</span>;
+export function VisaExpiry({ employee }: { employee: WithVisa }) {
+  const expiresAt = visaExpiry(employee);
+
+  if (!expiresAt) return <span className="expiry">{EM_DASH}</span>;
 
   const status = resolveVisaStatus(employee);
   const modifier =
@@ -67,5 +79,5 @@ export function VisaExpiry({ employee }: { employee: Pick<Employee, 'visaStatus'
         ? 'expiry--w'
         : '';
 
-  return <span className={`expiry ${modifier}`.trim()}>{formatDate(employee.visaExpiryDate)}</span>;
+  return <span className={`expiry ${modifier}`.trim()}>{formatDate(expiresAt)}</span>;
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { UserRole } from '@/core/config/roles';
+import { ACCESS } from '@/core/config/access';
 import { routes } from '@/core/config/routes';
 import { apiMessage } from '@/core/api/unwrap';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { AlertIcon, ChevronDownIcon } from '@/components/ui/icons';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/states';
 import { formatDate } from '@/lib/format';
-import { RoleGate } from '@/features/auth/components/role-gate';
+import { AccessGate } from '@/features/auth/components/access-gate';
 import { useReinstateEmployee } from '@/features/employees/hooks/use-employee-mutations';
 import { useEmployeeDeparture } from '../hooks/use-departures';
 import type { Departure } from '../types';
@@ -18,8 +18,6 @@ import { ApprovalsPanel } from './approvals-panel';
 import { ClearancePanel } from './clearance-panel';
 import { StageStatus } from './departure-stage';
 import { HrSectionPanel } from './hr-section-panel';
-
-const WRITE_ROLES: readonly UserRole[] = ['HR', 'CHAIRMAN', 'MD'];
 
 /**
  * The Employee Departure Form — three panels matching the paper form's three
@@ -107,11 +105,11 @@ export function DepartureRecord({ employeeId }: { employeeId: string }) {
           </p>
         </div>
         {!departure.voidedAt && departure.employee.employmentStatus === 'CANCELLED' ? (
-          <RoleGate allow={WRITE_ROLES}>
+          <AccessGate rule={ACCESS.employeeReinstate}>
             <div className="head-actions">
               <ReinstateAction departure={departure} />
             </div>
-          </RoleGate>
+          </AccessGate>
         ) : null}
       </div>
 
@@ -120,7 +118,8 @@ export function DepartureRecord({ employeeId }: { employeeId: string }) {
       {/* Keyed so a different record remounts the forms with its own values. */}
       <div className="ef-stack" key={departure.id}>
         <HrSectionPanel departure={departure} frozen={frozen} />
-        <ClearancePanel departure={departure} frozen={frozen} />
+        {/* The clearance panel locks itself by stage — Operations own it. */}
+        <ClearancePanel departure={departure} />
         <ApprovalsPanel departure={departure} />
       </div>
     </>

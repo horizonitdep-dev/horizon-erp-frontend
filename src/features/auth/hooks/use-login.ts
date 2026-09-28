@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { setTokens } from '@/core/auth/token-store';
 import { queryKeys } from '@/core/config/query-keys';
-import { AFTER_LOGIN } from '@/core/config/routes';
+import { AFTER_LOGIN, routes } from '@/core/config/routes';
 import { apiMessage } from '@/core/api/unwrap';
 import { login } from '../api/auth.api';
 import type { LoginPayload, LoginResponse } from '../types';
@@ -26,7 +26,8 @@ export function useLogin(redirectTo?: string) {
       });
       // Seed the session so the hub renders without a second round trip.
       queryClient.setQueryData(queryKeys.auth.me, data.user);
-      router.replace(safeRedirect(redirectTo));
+      // A seeded password must be replaced before anything else is shown.
+      router.replace(data.user.mustChangePassword ? routes.changePassword : safeRedirect(redirectTo));
     },
   });
 

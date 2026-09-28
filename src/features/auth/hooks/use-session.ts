@@ -25,7 +25,6 @@ export function useSession() {
 
   return {
     user: query.data ?? null,
-    role: query.data?.role ?? null,
     isBootstrapping,
     isLoading: isBootstrapping || (hasAccessToken && query.isPending),
     isAuthenticated: hasAccessToken && !!query.data,

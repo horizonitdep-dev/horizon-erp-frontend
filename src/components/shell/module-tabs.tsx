@@ -2,21 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { modulesForRole, moduleIdForPath } from '@/core/config/modules';
+import { modulesFor, moduleIdForPath } from '@/core/config/modules';
 import { useSession } from '@/features/auth/hooks/use-session';
 
 /**
  * DESIGN.md §7 SHELL. 50px, frosted, 2.5px gradient underline on the active tab.
  *
- * Every department the role can see renders. The four not built this sprint
+ * Every department the user can see renders. The four not built this sprint
  * render as spans — visible, plainly not going anywhere, and not a link that
  * 404s.
  */
 export function ModuleTabs() {
   const pathname = usePathname();
-  const { role } = useSession();
+  const { user } = useSession();
 
-  const modules = modulesForRole(role);
+  const modules = modulesFor(user);
   const activeId = moduleIdForPath(pathname);
 
   return (

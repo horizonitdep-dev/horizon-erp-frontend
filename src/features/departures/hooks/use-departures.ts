@@ -5,10 +5,13 @@ import { toast } from 'sonner';
 import { queryKeys } from '@/core/config/query-keys';
 import { apiMessage, type Paginated } from '@/core/api/unwrap';
 import {
+  approveClearance,
   approveDeparture,
   getDeparture,
   listDepartures,
-  updateClearance,
+  rejectClearance,
+  saveClearance,
+  submitClearance,
   updateHrSection,
 } from '../api/departures.api';
 import type {
@@ -86,7 +89,60 @@ export function useSaveHrSection(departureId: string) {
 }
 
 export function useSaveClearance(departureId: string) {
-  return useSaveSection<Partial<ClearancePayload>>(departureId, updateClearance, 'Clearance recorded');
+  return useSaveSection<Partial<ClearancePayload>>(departureId, saveClearance, 'Clearance saved');
+}
+
+/**
+ * The three clearance transitions. Each returns the whole record with its new
+ * stage, so the cache is written directly and the page moves at once.
+ */
+function useClearanceTransition<V = void>(
+  departureId: string,
+  run: (id: string, value: V) => Promise<Departure>,
+  successMessage: string,
+  failureMessage: string,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<Departure, unknown, V>({
+    mutationFn: (value) => run(departureId, value),
+    onSuccess: (departure) => {
+      queryClient.setQueryData(queryKeys.departures.detail(departure.id), departure);
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.departures.all,
+        refetchType: 'none',
+      });
+      toast.success(successMessage);
+    },
+    onError: (error) => toast.error(apiMessage(error, failureMessage)),
+  });
+}
+
+export function useSubmitClearance(departureId: string) {
+  return useClearanceTransition(
+    departureId,
+    (id) => submitClearance(id),
+    'Clearance sent to the Operations Manager',
+    'The clearance section could not be submitted.',
+  );
+}
+
+export function useApproveClearance(departureId: string) {
+  return useClearanceTransition(
+    departureId,
+    (id) => approveClearance(id),
+    'Clearance approved',
+    'The clearance approval could not be recorded.',
+  );
+}
+
+export function useRejectClearance(departureId: string) {
+  return useClearanceTransition<string>(
+    departureId,
+    (id, note) => rejectClearance(id, note),
+    'Clearance sent back for correction',
+    'The clearance section could not be sent back.',
+  );
 }
 
 export function useApproveDeparture(departureId: string) {

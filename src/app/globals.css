@@ -7,6 +7,8 @@
 @import '../styles/screens.css';
 @import '../styles/employee-form.css';
 @import '../styles/departure.css';
+@import '../styles/account.css';
+@import '../styles/operations.css';
 
 @tailwind base;
 @tailwind components;

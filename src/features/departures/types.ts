@@ -30,9 +30,12 @@ export const REASON_LABELS: Record<ReasonForLeaving, string> = {
   BEREAVEMENT: 'Bereavement',
 };
 
+/** In workflow order — derived by the server, never stored. */
 export const DEPARTURE_STAGES = [
   'DRAFT',
-  'AWAITING_DEPARTURE',
+  'AWAITING_CLEARANCE',
+  'CLEARANCE_SUBMITTED',
+  'CLEARANCE_REJECTED',
   'AWAITING_APPROVAL',
   'COMPLETED',
   'VOIDED',
@@ -41,11 +44,19 @@ export type DepartureStage = (typeof DEPARTURE_STAGES)[number];
 
 export const STAGE_LABELS: Record<DepartureStage, string> = {
   DRAFT: 'Draft',
-  AWAITING_DEPARTURE: 'Awaiting departure',
+  AWAITING_CLEARANCE: 'Awaiting clearance',
+  CLEARANCE_SUBMITTED: 'Clearance submitted',
+  CLEARANCE_REJECTED: 'Clearance sent back',
   AWAITING_APPROVAL: 'Awaiting approval',
   COMPLETED: 'Completed',
   VOIDED: 'Voided',
 };
+
+/** The only stages in which the clearance section can be saved or submitted. */
+export const CLEARANCE_EDITABLE_STAGES: readonly DepartureStage[] = [
+  'AWAITING_CLEARANCE',
+  'CLEARANCE_REJECTED',
+];
 
 /** Columns the API will sort by. Anything else is rejected. */
 export const DEPARTURE_SORT_FIELDS = ['createdAt', 'formDate', 'departureDate', 'referenceNo'] as const;
@@ -60,9 +71,12 @@ export interface Actor {
 export interface DepartureEmployee {
   id: string;
   employeeCode: string;
+  /** The labour file number — null until the visa has been processed. */
+  fileNo: string | null;
   name: string;
   joiningDate: string;
-  designation: string;
+  /** Joined from shared reference data; "Designation" on the paper form. */
+  trade: { id: string; name: string } | null;
   emiratesIdNumber: string;
   visaExpiryDate: string;
   employmentStatus: EmploymentStatus;
@@ -91,8 +105,12 @@ export interface HrSectionPayload {
 
 /**
  * Section 2 — "To be completed by Drop off Driver / Operations Staff".
- * PATCH /hr/departures/:id/clearance. Transcribed from the signed paper form:
- * every date and time is what the driver wrote.
+ * PATCH /hr/departures/:id/clearance. Transcribed from the signed paper form by
+ * Operations staff below the Operations Manager: every date and time is what
+ * the driver wrote.
+ *
+ * The form's Reporting Manager row is not here — it is the Operations
+ * Manager's approval (POST …/clearance/approve).
  */
 export interface ClearancePayload {
   immigrationCleared: boolean | null;
@@ -107,8 +125,6 @@ export interface ClearancePayload {
   driverName: string | null;
   driverSignedDate: string | null;
   driverSignedTime: string | null;
-  reportingManagerName: string | null;
-  reportingManagerSigned: boolean | null;
   remarks: string | null;
 }
 
@@ -120,9 +136,15 @@ export interface Departure extends HrSectionPayload, ClearancePayload {
   /** Uploads are deferred this sprint; always null. */
   signedFormUrl: string | null;
 
-  /** Who typed the clearance section in, and when — not who signed it. */
-  clearanceRecordedAt: string | null;
-  clearanceRecordedBy: Actor | null;
+  /** Clearance maker/checker: submitted by Operations staff, reviewed by the Operations Manager. */
+  clearanceSubmittedAt: string | null;
+  clearanceSubmittedBy: Actor | null;
+  clearanceApprovedAt: string | null;
+  clearanceApprovedBy: Actor | null;
+  /** Kept only until the next submit, which clears all three. */
+  clearanceRejectedAt: string | null;
+  clearanceRejectedBy: Actor | null;
+  clearanceRejectionNote: string | null;
 
   hrApprovedAt: string | null;
   hrApprovedBy: Actor | null;
@@ -140,7 +162,10 @@ export interface Departure extends HrSectionPayload, ClearancePayload {
   nextStep: string;
   warnings: string[];
   hrSectionComplete: boolean;
+  /** Every field a submit needs is filled. */
   clearanceComplete: boolean;
+  /** The fields still empty — named so the panel can say what is missing before submitting. */
+  clearanceMissingFields: (keyof ClearancePayload)[];
 }
 
 export interface ApprovalTick {
@@ -157,7 +182,7 @@ export interface DepartureListItem {
   departureDate: string | null;
   stage: DepartureStage;
   voidedAt: string | null;
-  employee: Pick<DepartureEmployee, 'id' | 'employeeCode' | 'name' | 'designation'>;
+  employee: Pick<DepartureEmployee, 'id' | 'employeeCode' | 'fileNo' | 'name' | 'trade'>;
   approvals: { hr: ApprovalTick | null; md: ApprovalTick | null };
 }
 

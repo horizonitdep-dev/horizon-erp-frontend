@@ -410,3 +410,40 @@
 
 /* The unreachable-server panel shown in place of the shell. */
 .boot-panel { max-width: 460px; width: 100%; }
+
+/* ══════════ ACTION BAR ══════════
+   A frosted bar pinned to the bottom for "there is something to act on" —
+   the employee form's save row and the Operations selection bar are the same
+   object, so they share one definition. Geometry from the ops mockup's
+   `.selbar`, which matches the add-employee mockup's `.actions` exactly. */
+
+.actionbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border-top: 1px solid var(--line);
+  animation: rise .28s var(--spring) both;
+}
+.actionbar .inner {
+  max-width: var(--wrap-app); margin: 0 auto;
+  padding: 16px var(--shell-x);
+  display: flex; align-items: center; gap: 12px;
+}
+.actionbar .status,
+.actionbar .cnt {
+  font: 500 13.5px var(--font-inter);
+  display: flex; align-items: center; gap: 9px;
+  color: var(--ink-3);
+}
+.actionbar .cnt b { font: 600 13.5px var(--font-inter); color: var(--o); }
+.actionbar .right { margin-left: auto; display: flex; gap: 10px; }
+
+@keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* Inline SVGs authored like the mockups' `svg.s` helper: stroke the current
+   colour, no fill, round caps and joins. */
+svg.s { stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* An input whose value is a code or a number people compare — mono, per
+   DESIGN.md §5. Matches the mockups' `.sh input.mono`. */
+.mono-field input { font: 500 14px var(--font-mono); }

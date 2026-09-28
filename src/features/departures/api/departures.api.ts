@@ -33,8 +33,12 @@ export async function updateHrSection(
   return unwrap(res);
 }
 
-/** Panel 2. The server records who typed it and when. */
-export async function updateClearance(
+/**
+ * Panel 2 — maker/checker. Operations staff below the Operations Manager save
+ * and submit; the Operations Manager approves or rejects. Save only works while
+ * awaiting clearance or after a rejection (409 otherwise).
+ */
+export async function saveClearance(
   id: string,
   payload: Partial<ClearancePayload>,
 ): Promise<Departure> {
@@ -42,7 +46,26 @@ export async function updateClearance(
   return unwrap(res);
 }
 
-/** No role argument — the server fills the caller's own slot. */
+/** Sends the saved section to the Operations Manager. 400 lists missing fields. */
+export async function submitClearance(id: string): Promise<Departure> {
+  const res = await api.post<ApiEnvelope<Departure>>(`/hr/departures/${id}/clearance/submit`);
+  return unwrap(res);
+}
+
+export async function approveClearance(id: string): Promise<Departure> {
+  const res = await api.post<ApiEnvelope<Departure>>(`/hr/departures/${id}/clearance/approve`);
+  return unwrap(res);
+}
+
+/** A note is required; it is shown to Operations until they resubmit. */
+export async function rejectClearance(id: string, note: string): Promise<Departure> {
+  const res = await api.post<ApiEnvelope<Departure>>(`/hr/departures/${id}/clearance/reject`, {
+    note,
+  });
+  return unwrap(res);
+}
+
+/** Final HR / MD approval. No role argument — the server fills the caller's own slot. */
 export async function approveDeparture(id: string): Promise<Departure> {
   const res = await api.post<ApiEnvelope<Departure>>(`/hr/departures/${id}/approve`);
   return unwrap(res);

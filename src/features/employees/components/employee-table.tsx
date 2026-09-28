@@ -60,7 +60,8 @@ export function EmployeeTable({
           );
         },
       }),
-      columnHelper.accessor('designation', {
+      columnHelper.accessor((row) => row.trade?.name ?? null, {
+        id: 'trade',
         header: 'Designation',
         enableSorting: false,
         cell: (info) => info.getValue() || EM_DASH,
@@ -84,7 +85,10 @@ export function EmployeeTable({
         header: 'Joined',
         cell: (info) => <span className="cell-num">{formatDate(info.getValue())}</span>,
       }),
-      columnHelper.accessor('visaExpiryDate', {
+      // A display column, not an accessor: the expiry lives on the current visa
+      // DOCUMENT now, and the API cannot order by a to-many relation's column.
+      columnHelper.display({
+        id: 'visaExpiry',
         header: 'Visa expiry',
         cell: (info) => <VisaExpiry employee={info.row.original} />,
       }),

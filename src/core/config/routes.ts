@@ -3,6 +3,8 @@
  */
 export const routes = {
   login: '/login',
+  /** Forced on first sign-in while the account still has its seeded password. */
+  changePassword: '/change-password',
   hub: '/hub',
   overview: '/overview',
   hr: {
@@ -12,6 +14,15 @@ export const routes = {
     cancelledEmployees: '/hr/employees/cancelled',
     /** Keyed by employee — shows that employee's most recent departure record. */
     departure: (employeeId: string) => `/hr/employees/${employeeId}/departure`,
+  },
+  operations: {
+    master: '/operations/master',
+    /** "Worker" in the UI; the API calls the same thing an employee. */
+    worker: (id: string) => `/operations/workers/${id}`,
+    movements: '/operations/movements',
+    projects: '/operations/projects',
+    project: (id: string) => `/operations/projects/${id}`,
+    dailyReport: '/operations/daily-report',
   },
 } as const;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { routes } from '@/core/config/routes';
 import { refreshAccessToken } from '@/core/auth/refresh';
 import { useAuthStore } from '@/core/auth/token-store';
@@ -23,21 +23,29 @@ import { useSession } from '../hooks/use-session';
  */
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isBootstrapping, isLoading } = useSession();
+  const pathname = usePathname();
+  const { user, isBootstrapping, isLoading } = useSession();
   const hasAccessToken = useAuthStore((s) => s.hasAccessToken);
   const isServerUnreachable = useAuthStore((s) => s.isServerUnreachable);
 
   const unreachable = !isBootstrapping && !hasAccessToken && isServerUnreachable;
   const settledWithoutSession = !isBootstrapping && !hasAccessToken && !isServerUnreachable;
 
+  // Every account is seeded with a known password. Until it is replaced, the
+  // change-password screen is the only page that renders — whatever URL was
+  // typed, reloaded or bookmarked. The API does not enforce this; the screen does.
+  const mustChangePassword = !!user?.mustChangePassword && pathname !== routes.changePassword;
+
   useEffect(() => {
     if (settledWithoutSession) {
       router.replace(routes.login);
+    } else if (mustChangePassword) {
+      router.replace(routes.changePassword);
     }
-  }, [settledWithoutSession, router]);
+  }, [settledWithoutSession, mustChangePassword, router]);
 
   if (unreachable) return <ServerUnreachable />;
-  if (isLoading || settledWithoutSession) return <BootScreen />;
+  if (isLoading || settledWithoutSession || mustChangePassword) return <BootScreen />;
 
   return <>{children}</>;
 }

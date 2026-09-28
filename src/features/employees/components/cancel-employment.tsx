@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { UserRole } from '@/core/config/roles';
+import { ACCESS } from '@/core/config/access';
 import { routes } from '@/core/config/routes';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { RoleGate } from '@/features/auth/components/role-gate';
+import { AccessGate } from '@/features/auth/components/access-gate';
 import { useCancelEmployee } from '../hooks/use-employee-mutations';
 import type { Employee } from '../types';
-
-const WRITE_ROLES: readonly UserRole[] = ['HR', 'CHAIRMAN', 'MD'];
 
 /**
  * The cancel flow — guide §7. Confirm, open a draft departure, route straight
@@ -32,7 +30,7 @@ export function CancelEmployment({ employee }: { employee: Employee }) {
   }
 
   return (
-    <RoleGate allow={WRITE_ROLES}>
+    <AccessGate rule={ACCESS.employeeCancel}>
       <Button variant="ghost" onClick={() => setOpen(true)}>
         Cancel employment
       </Button>
@@ -53,6 +51,6 @@ export function CancelEmployment({ employee }: { employee: Employee }) {
         </p>
         <p>This can be undone by reinstating — the departure form is then voided, not deleted.</p>
       </ConfirmDialog>
-    </RoleGate>
+    </AccessGate>
   );
 }

@@ -204,23 +204,8 @@
 .ef-check.todo svg { stroke: var(--dot-neutral); }
 .ef-railnote { font-size: 13px; color: var(--ink-3); line-height: 1.5; }
 
-/* ══════════ ACTION BAR ══════════ */
-
-.ef-actions {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
-  background: var(--glass); backdrop-filter: blur(var(--glass-blur));
-  border-top: 1px solid var(--line);
-}
-.ef-actions .inner {
-  max-width: var(--wrap-app); margin: 0 auto;
-  padding: 16px var(--shell-x);
-  display: flex; align-items: center; gap: 12px;
-}
-.ef-actions .status {
-  font-size: 13px; color: var(--ink-3);
-  display: flex; align-items: center; gap: 8px;
-}
-.ef-actions .right { margin-left: auto; display: flex; gap: 10px; }
+/* ══════════ ACTION BAR ══════════
+   Shared with the Operations selection bar — see `.actionbar` in screens.css. */
 
 /* The fixed bar must not sit on top of the last panel. */
 .ef-page { padding-bottom: 112px; }

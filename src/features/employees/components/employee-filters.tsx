@@ -1,21 +1,24 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDownIcon, SearchIcon } from '@/components/ui/icons';
+import { SearchIcon } from '@/components/ui/icons';
+import { FilterPill } from '@/components/ui/filter-pill';
 import { formatCount } from '@/lib/format';
+import { useTrades } from '@/core/reference/use-trades';
 import { VISA_STATUS_LABELS, VISA_STATUSES, type EmployeeOptions } from '../types';
 
 /**
  * Filter bar — DESIGN.md §7. Debounced search, then the filters the API
- * actually supports: designation, department, nationality and visa status.
+ * actually supports: trade, department, nationality and visa status.
  *
- * The option lists come from GET /hr/employees/options, so they are the full
- * set rather than whatever happened to load on the current page.
+ * Department and nationality come from GET /hr/employees/options. Trades come
+ * from GET /operations/trades instead — they are shared reference data, so
+ * neither module owns the list.
  */
 
 export type EmployeeFilterValues = {
   search: string;
-  designation: string;
+  tradeId: string;
   department: string;
   nationality: string;
   visaStatus: string;
@@ -23,7 +26,7 @@ export type EmployeeFilterValues = {
 
 export const EMPTY_FILTERS: EmployeeFilterValues = {
   search: '',
-  designation: '',
+  tradeId: '',
   department: '',
   nationality: '',
   visaStatus: '',
@@ -45,6 +48,10 @@ export function EmployeeFilters({
   resultCount: number | null;
   onChange: (next: EmployeeFilterValues) => void;
 }) {
+  // Trades are shared reference data, so they come from core/ rather than
+  // from HR's own options endpoint.
+  const { data: trades } = useTrades();
+
   // Local mirror so typing stays responsive; only the debounced value reaches
   // the API. The timer lives in the change handler rather than an effect —
   // there is no external state to synchronise with, just a delayed callback.
@@ -78,9 +85,9 @@ export function EmployeeFilters({
 
       <FilterPill
         label="Designation"
-        value={values.designation}
-        options={asOptions(options?.designations)}
-        onChange={(designation) => onChange({ ...values, designation })}
+        value={values.tradeId}
+        options={(trades ?? []).map((trade) => ({ value: trade.id, label: trade.name }))}
+        onChange={(tradeId) => onChange({ ...values, tradeId })}
       />
       <FilterPill
         label="Department"
@@ -104,58 +111,6 @@ export function EmployeeFilters({
       <span className="filter-count">
         {resultCount === null ? '' : `${formatCount(resultCount)} people`}
       </span>
-    </div>
-  );
-}
-
-/**
- * A pill wrapping a native select. The select carries the interaction and the
- * accessibility for free; the pill carries the design. Clearing is a separate
- * button so the × does not fight the select for the same click.
- */
-export function FilterPill({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-}) {
-  const active = value !== '';
-  const selected = options.find((o) => o.value === value);
-
-  return (
-    <div className="pill" data-active={active || undefined}>
-      <span className="pill-label">{active ? (selected?.label ?? value) : label}</span>
-      {active ? (
-        <button
-          type="button"
-          className="x pill-clear"
-          onClick={() => onChange('')}
-          aria-label={`Clear ${label} filter`}
-        >
-          ×
-        </button>
-      ) : (
-        <ChevronDownIcon />
-      )}
-      <select
-        className="pill-select"
-        value={value}
-        aria-label={label}
-        disabled={options.length === 0}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">All {label.toLowerCase()}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }

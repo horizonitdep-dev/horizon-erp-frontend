@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { SearchIcon } from '@/components/ui/icons';
 import { EmptyState, ErrorState, TableSkeleton } from '@/components/ui/states';
 import { formatCount } from '@/lib/format';
-import { FilterPill } from '@/features/employees/components/employee-filters';
-import { Pagination } from '@/features/employees/components/employee-list';
+import { FilterPill } from '@/components/ui/filter-pill';
+import { Pagination } from '@/components/ui/pagination';
 import { useDepartures } from '../hooks/use-departures';
 import {
   DEPARTURE_STAGES,

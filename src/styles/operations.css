@@ -1,0 +1,427 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Operations — master list, moves, projects, daily report.
+
+   Only what the shared system does not already provide. The ops mockups reuse
+   the existing classes verbatim, so tiles, filter bar, pagination, tables,
+   chips, dots, buttons and the action bar are NOT redefined here — they are
+   `.tile-grid` / `.stat-tile`, `.filter-bar` / `.filter-search` / `.pill`,
+   `.pagination` / `.page-btn`, `.hirs-table`, `.chip`, `.dot`, `.btn-*` and
+   `.actionbar`.
+
+   What remains is genuinely new: the group tabs, the move dialog, the worker
+   timeline, the daily-report matrix, and the movement log's day headings.
+   Every value is transcribed from design/hirs-ops-*.html.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════ GROUP TABS ══════════
+   A second row of pills under the sub-nav — "which group", not "which screen".
+   From `.groups` in the master-list mockup. */
+
+.op-groups { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.op-group {
+  display: flex; align-items: center; gap: 9px;
+  height: 44px; padding: 0 15px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--card);
+  font: 500 13.5px var(--font-inter); color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.op-group:hover { border-color: var(--line-strong); }
+.op-group:focus-visible { outline: none; border-color: var(--o); box-shadow: var(--ring); }
+.op-group[data-selected='true'] {
+  background: var(--tint); border-color: var(--o-line); color: var(--o);
+}
+.op-group-count {
+  font: 500 11.5px var(--font-mono);
+  padding: 2px 7px; border-radius: var(--r-pill);
+  background: var(--count-bg); color: var(--ink-3);
+}
+.op-group[data-selected='true'] .op-group-count { background: var(--card); color: var(--o); }
+
+/* A group that needs attention. The mockup's amber border is the warning dot
+   colour, which is already a token — no raw hex. */
+.op-group[data-tone='warn'],
+.op-group[data-tone='bad'] {
+  border-color: var(--dot-warn);
+  background: var(--count-alert-bg);
+  color: var(--warn);
+}
+.op-group[data-tone='warn'] .op-group-count,
+.op-group[data-tone='bad'] .op-group-count { background: var(--card); color: var(--warn); }
+
+/* ══════════ MASTER TABLE ══════════ */
+
+.op-check { width: 44px; text-align: center; }
+.hirs-table tbody tr[data-selected='true'] td { background: var(--tint); }
+.op-sub { display: block; font-size: 12px; color: var(--ink-3); }
+.op-num { text-align: right; }
+.op-select-note { padding: 12px 20px 0; font-size: 12.5px; color: var(--ink-3); }
+.op-select-note b { color: var(--ink-2); font-weight: 600; }
+.op-note-inline { margin-top: 14px; font-size: 12.5px; color: var(--ink-3); }
+
+/* The bar is fixed, so the last rows need room beneath them. */
+.op-page { padding-bottom: 112px; }
+
+/* ══════════ MOVE DIALOG ══════════
+   From `.backdrop` / `.dialog` in the master-list mockup. */
+
+.op-dialog-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center; padding: 24px;
+  background: rgba(22, 22, 26, .42);
+  backdrop-filter: blur(2px);
+}
+.op-dialog {
+  width: 560px; max-width: 100%; max-height: calc(100vh - 48px);
+  display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-5xl); box-shadow: var(--sh-card);
+}
+.op-dialog-head { padding: 22px 24px 18px; border-bottom: 1px solid var(--line); }
+.op-dialog-head h2 { font: 600 21px var(--font-sora); letter-spacing: -.02em; }
+.op-dialog-head p { margin-top: 5px; font-size: 13px; color: var(--ink-3); }
+.op-dialog-body { padding: 22px 24px; display: grid; gap: 16px; overflow-y: auto; }
+.op-dialog-foot {
+  padding: 16px 24px; border-top: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 0 0 var(--r-5xl) var(--r-5xl);
+  display: flex; align-items: center; gap: 10px;
+}
+.op-dialog-foot .right { margin-left: auto; display: flex; gap: 10px; }
+
+/* Fields inside the dialog. Same 50px geometry as every other input (§7). */
+.op-field { display: grid; gap: 8px; min-width: 0; }
+.op-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: end; }
+.op-label,
+.op-field legend {
+  font: 500 11px var(--font-inter); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+/* Most `.op-field`s are labels; the radio group has to be a fieldset for the
+   group to have an accessible name. Without this reset the browser draws its
+   default groove border and notches the legend into it. */
+fieldset.op-field { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+/* A legend is not a grid item — it renders outside the grid flow, so the
+   fieldset's `gap` never applies beneath it. The margin restates that gap so
+   the label sits the same 8px above its control as every other field. */
+.op-field legend { padding: 0; display: block; margin-bottom: 8px; }
+.op-optional { text-transform: none; letter-spacing: 0; font-weight: 400; }
+/* Checkboxes and radios keep their own 17px geometry — without the guard
+   they inherit the 50px field height and collide with their label. */
+.op-field input:not([type='checkbox']):not([type='radio']),
+.op-field select,
+.op-field textarea {
+  width: 100%; height: 50px; padding: 0 15px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--card); color: var(--ink);
+  font: 400 15px var(--font-inter); outline: none;
+  appearance: none; -webkit-appearance: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.op-field textarea { height: auto; min-height: 76px; padding: 13px 15px; resize: vertical; line-height: 1.55; }
+/* Without this a placeholder inherits the browser's grey and reads as a real
+   typed-in value. */
+.op-field input::placeholder,
+.op-field textarea::placeholder { color: var(--placeholder); }
+.op-field input:not([type='checkbox']):not([type='radio']):focus,
+.op-field select:focus,
+.op-field textarea:focus { border-color: var(--o); box-shadow: var(--ring); }
+.op-field input:disabled,
+.op-field textarea:disabled { background: var(--surface-2); color: var(--ink-2); }
+
+/* Destination pills — `.seg` in the mockup. */
+.op-seg { display: flex; gap: 8px; flex-wrap: wrap; }
+.op-seg label {
+  /* `position: relative` anchors the visually-hidden radio inside the pill. */
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 15px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--card);
+  font: 500 13.5px var(--font-inter); color: var(--ink-2);
+  cursor: pointer; transition: border-color .2s, background .2s, color .2s;
+}
+.op-seg label:has(input:checked) {
+  background: var(--tint); border-color: var(--o-line); color: var(--o);
+}
+.op-seg label:has(input:focus-visible) { border-color: var(--o); box-shadow: var(--ring); }
+.op-seg input { position: absolute; opacity: 0; pointer-events: none; }
+
+/* Who is being moved — `.who-list` in the mockup. */
+.op-who summary { cursor: pointer; font-size: 13px; color: var(--ink-3); padding: 8px 0; }
+.op-who summary:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 4px; }
+.op-who ul {
+  list-style: none; margin: 4px 0 0; padding: 0;
+  max-height: 132px; overflow: auto;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--surface-2);
+}
+.op-who li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px;
+}
+.op-who li:last-child { border-bottom: 0; }
+.op-who li span { font: 400 11.5px var(--font-mono); color: var(--ink-3); margin-left: auto; }
+
+/* `.warnbox` in the mockup. */
+.op-warn,
+.op-error {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 12px 14px; border-radius: var(--r-2xl);
+  font-size: 12.5px; line-height: 1.5;
+}
+.op-warn { background: var(--count-alert-bg); color: var(--warn); }
+.op-error { background: var(--tint); color: var(--bad); }
+.op-warn svg,
+.op-error svg { width: 15px; height: 15px; flex: none; margin-top: 1px; stroke-width: 2; }
+.op-error b { font-weight: 600; }
+
+/* ══════════ WORKER DETAIL ══════════ */
+
+.op-detail { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.op-rail { display: grid; gap: 16px; }
+.op-facts { display: grid; margin: 0; }
+.op-fact {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+  padding: 11px 0; border-bottom: 1px solid var(--line);
+}
+.op-fact:last-child { border-bottom: 0; }
+.op-fact dt {
+  display: grid; gap: 2px;
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.op-fact-hint { letter-spacing: 0; text-transform: none; font-weight: 400; }
+.op-fact dd { margin: 0; font-size: 13.5px; color: var(--ink); text-align: right; }
+.op-hr-link { margin-top: 16px; width: 100%; justify-content: center; }
+.op-recorded { display: block; margin-top: 3px; color: var(--ink-3); }
+
+/* Timeline — `.timeline` in the worker-detail mockup. */
+.timeline { position: relative; padding-left: 28px; margin: 0; list-style: none; }
+.timeline::before {
+  content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px;
+  width: 1px; background: var(--line);
+}
+.timeline-item { position: relative; padding: 0 0 22px; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -25px; top: 5px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--card); border: 2px solid var(--line-strong);
+}
+.timeline-item[data-current='true']::before { background: var(--o); border-color: var(--o); }
+.timeline-item h4 { display: flex; align-items: center; gap: 8px; font: 600 14.5px var(--font-inter); }
+.timeline-item .dates { margin-top: 3px; font: 400 12px var(--font-mono); color: var(--ink-3); }
+.timeline-item .meta { margin-top: 6px; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* ══════════ MOVEMENT LOG ══════════
+   `.daygroup` in the projects-movements mockup. */
+
+.op-days { display: grid; gap: 26px; }
+.op-day { display: block; }
+.op-day-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  font: 600 14px var(--font-sora);
+}
+.op-day-head span { font: 400 12.5px var(--font-inter); color: var(--ink-3); }
+
+/* ══════════ DAILY REPORT MATRIX ══════════ */
+
+.matrix-wrap {
+  overflow: auto; max-height: 70vh;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+}
+.matrix { border-collapse: separate; border-spacing: 0; width: 100%; }
+.matrix thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--surface-2);
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3); padding: 12px 10px; white-space: nowrap; text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+.matrix thead th:first-child { left: 0; z-index: 3; text-align: left; }
+.matrix tbody th,
+.matrix tfoot th {
+  position: sticky; left: 0; z-index: 1;
+  background: var(--card);
+  text-align: left; font: 500 13px var(--font-inter); color: var(--ink);
+  padding: 0 16px; height: 44px; white-space: nowrap;
+  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.matrix td {
+  height: 44px; padding: 0 10px; text-align: right;
+  font: 500 13px var(--font-mono); color: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+}
+.matrix tbody tr:hover td,
+.matrix tbody tr:hover th { background: var(--row-hover); }
+.matrix .total { font-weight: 600; color: var(--ink); background: var(--surface-2); }
+.matrix tfoot th.total { background: var(--surface-2); }
+.matrix .grand { background: var(--tint); color: var(--o); }
+.matrix-cards { display: none; }
+
+/* Breadcrumb separator — a chevron pointing right, not down. */
+.crumb-chevron { transform: rotate(-90deg); }
+
+/* ══════════ RESPONSIVE ══════════ */
+
+@media (max-width: 1080px) {
+  .op-detail { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .op-field-row,
+  .op-arrival-add { grid-template-columns: 1fr; }
+
+  /* The grid stops being a grid — one card per row, non-zero trades only. */
+  .matrix-wrap { display: none; }
+  .matrix-cards { display: grid; gap: 12px; }
+  .matrix-card {
+    padding: 14px 16px; background: var(--card);
+    border: 1px solid var(--line); border-radius: var(--r-2xl);
+  }
+  .matrix-card h4 {
+    display: flex; justify-content: space-between; gap: 12px;
+    font: 600 14px var(--font-inter); margin-bottom: 10px;
+  }
+  .matrix-card h4 span { font: 600 14px var(--font-mono); color: var(--o); }
+  .matrix-card dl { display: grid; gap: 6px; margin: 0; }
+  .matrix-card dl > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+  .matrix-card dt { color: var(--ink-3); }
+  .matrix-card dd { margin: 0; font: 500 13px var(--font-mono); }
+}
+
+/* ══════════ BADGE ══════════
+   A non-interactive label — `.pill` is a 38px control and must not stand in
+   for one. From `.badge` in the projects mockup. Moves to components.css if a
+   second module needs it. */
+
+.badge {
+  display: inline-flex; align-items: center;
+  font: 500 10.5px var(--font-inter); letter-spacing: .09em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: var(--r-pill);
+  background: var(--count-bg); color: var(--ink-2);
+}
+.badge--site     { background: var(--tint); color: var(--o); }
+.badge--markup   { background: var(--count-bg); color: var(--ink-2); }
+.badge--internal { background: var(--count-bg); color: var(--ink-3); }
+
+/* ══════════ DAILY REPORT PANELS ══════════
+   Transcribed from `.grid3` / `.kv` / `.mini` / `.addrow` / `.notefield` in
+   design/hirs-ops-daily-report.html. Three equal columns — not an auto-fit
+   grid, which reflows to two at some widths and stops matching the report. */
+
+.op-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+
+/* Camp — label left, a narrow number right, one per row. */
+.op-kv {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.op-kv:last-child { border-bottom: 0; }
+.op-kv .k { font-size: 13px; color: var(--ink-2); }
+.op-kv input {
+  width: 88px; height: 38px;
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); padding: 0 12px;
+  font: 500 14px var(--font-mono); color: var(--ink);
+  outline: none; text-align: right;
+  transition: border-color .2s, box-shadow .2s;
+}
+.op-kv input:focus { border-color: var(--o); box-shadow: var(--ring); }
+.op-kv input:disabled { background: var(--surface-2); color: var(--ink-2); }
+/* The computed value carries the same geometry so the column stays straight. */
+.op-kv .ro {
+  width: 88px; height: 38px;
+  border-radius: var(--r-lg); background: var(--surface-2);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 12px; font: 500 14px var(--font-mono); color: var(--ink-3);
+}
+
+/* Vehicles and expected arrivals. Denser than `.hirs-table` — these sit three
+   to a row, so they get their own 44px rows and 8px gutters. */
+.op-mini { width: 100%; border-collapse: collapse; }
+.op-mini th {
+  font: 500 10.5px var(--font-inter); letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3); text-align: left;
+  padding: 0 8px 10px; border-bottom: 1px solid var(--line);
+}
+.op-mini td { padding: 0 8px; height: 44px; font-size: 13px; border-bottom: 1px solid var(--line); }
+.op-mini tr:last-child td { border-bottom: 0; }
+.op-mini .mono { font: 500 12.5px var(--font-mono); }
+.op-mini .num { text-align: right; font: 500 13px var(--font-mono); }
+.op-mini input {
+  width: 100%; height: 34px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); color: var(--ink);
+  font: 400 13px var(--font-inter); outline: none;
+}
+.op-mini input:focus { border-color: var(--o); box-shadow: var(--ring); }
+.op-mini input::placeholder { color: var(--placeholder); }
+
+/* Remove a row. A bare × in the last cell, per the mockup. */
+.op-del {
+  background: none; border: 0; padding: 0;
+  color: var(--ink-3); cursor: pointer; font-size: 16px; line-height: 1;
+}
+.op-del:hover { color: var(--bad); }
+.op-del:disabled { opacity: .4; cursor: not-allowed; }
+
+/* "Add vehicle" / "Add expected arrival" — a link under the table, not a
+   permanently open draft row. */
+.op-addrow {
+  display: flex; align-items: center; gap: 8px; margin-top: 14px;
+  font: 500 13px var(--font-inter); color: var(--o);
+  cursor: pointer; background: none; border: 0; padding: 0;
+}
+.op-addrow svg { width: 15px; height: 15px; stroke-width: 2; }
+.op-addrow:disabled { opacity: .5; cursor: not-allowed; }
+
+/* "Saved 09:42 by Shankar Rana" */
+.op-saved {
+  font: 400 11.5px var(--font-mono); color: var(--ink-3);
+  display: flex; align-items: center; gap: 6px;
+}
+.op-saved .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+.op-saved--camp { margin-top: 14px; }
+
+/* The report's closing note — a full-width panel under the three columns. */
+.op-note-panel { margin-top: 16px; }
+.op-notefield {
+  width: 100%; min-height: 76px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl);
+  background: var(--card); padding: 13px 15px;
+  font: 400 13.5px var(--font-inter); color: var(--ink);
+  line-height: 1.55; outline: none; resize: vertical;
+  transition: border-color .2s, box-shadow .2s;
+}
+.op-notefield:focus { border-color: var(--o); box-shadow: var(--ring); }
+.op-notefield::placeholder { color: var(--placeholder); }
+.op-notefield:disabled { background: var(--surface-2); color: var(--ink-2); }
+
+@media (max-width: 1100px) { .op-grid3 { grid-template-columns: 1fr; } }
+
+/* A select inside a mini table matches its inputs. */
+.op-mini select {
+  width: 100%; height: 34px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); color: var(--ink);
+  font: 400 13px var(--font-inter); outline: none;
+}
+.op-mini select:focus { border-color: var(--o); box-shadow: var(--ring); }
+
+/* Inline label+control pairs in a filter bar or page header — the report's
+   date picker and the projects "Hide finished" toggle. */
+.op-inline-field { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); }
+.op-inline-field input {
+  height: 38px; padding: 0 13px;
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--card); color: var(--ink);
+  font: 400 13.5px var(--font-inter); outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.op-inline-field input:focus { border-color: var(--o); box-shadow: var(--ring); }
+.op-inline-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); }

@@ -3,9 +3,9 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { fieldErrors } from '@/core/api/unwrap';
-import type { UserRole } from '@/core/config/roles';
+import { ACCESS } from '@/core/config/access';
 import { EM_DASH, formatDate } from '@/lib/format';
-import { useHasRole } from '@/features/auth/components/role-gate';
+import { useCanAccess } from '@/features/auth/components/access-gate';
 import { EfChoice, EfInput } from '@/features/employees/components/employee-form-fields';
 import { useSaveHrSection } from '../hooks/use-departures';
 import {
@@ -17,8 +17,6 @@ import {
 import { REASON_LABELS, REASONS_FOR_LEAVING, type Departure } from '../types';
 import { PanelFoot, YES_NO, YES_NO_LABELS } from './panel-parts';
 
-export const HR_SECTION_ROLES: readonly UserRole[] = ['HR', 'CHAIRMAN', 'MD'];
-
 /**
  * Panel 1 — "To be completed by Employee / HR". Rows follow the paper form top
  * to bottom, left to right.
@@ -28,7 +26,7 @@ export const HR_SECTION_ROLES: readonly UserRole[] = ['HR', 'CHAIRMAN', 'MD'];
  * try. They belong to the employee record and are read through the relation.
  */
 export function HrSectionPanel({ departure, frozen }: { departure: Departure; frozen: boolean }) {
-  const canEdit = useHasRole(HR_SECTION_ROLES) && !frozen;
+  const canEdit = useCanAccess(ACCESS.departureHrSection) && !frozen;
   const save = useSaveHrSection(departure.id);
 
   const {
@@ -82,7 +80,7 @@ export function HrSectionPanel({ departure, frozen }: { departure: Departure; fr
           <ReadOnly label="Employee ID" value={employee.employeeCode} mono />
           <ReadOnly label="Employee's name" value={employee.name} />
           <ReadOnly label="Date of joining" value={formatDate(employee.joiningDate)} />
-          <ReadOnly label="Designation" value={employee.designation} />
+          <ReadOnly label="Designation" value={employee.trade?.name ?? null} />
           <ReadOnly label="Emirates ID No" value={employee.emiratesIdNumber} mono />
           <ReadOnly label="Visa expiry date" value={formatDate(employee.visaExpiryDate)} />
         </dl>
@@ -215,7 +213,7 @@ export function HrSectionPanel({ departure, frozen }: { departure: Departure; fr
           isDirty={isDirty}
           isPending={save.isPending}
           saveLabel="Save HR section"
-          viewOnlyReason="Only HR, the Managing Director and the Chairman can edit this section."
+          viewOnlyReason="HR & Admin officers and above, and executives, can edit this section."
         />
       </form>
     </section>

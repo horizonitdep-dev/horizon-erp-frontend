@@ -3,6 +3,7 @@ import {
   DRIVING_LICENSE,
   FAMILY_ROLES,
   GENDERS,
+  HR_DOCUMENT_KINDS,
   MARITAL_STATUSES,
   VISA_TYPES,
 } from '../types';
@@ -38,12 +39,70 @@ export const familyContactSchema = z.object({
   contactNo: optionalText,
 });
 
+/**
+ * One document on a new record. The rules mirror the ones the backend enforces,
+ * so a save is rejected here rather than by a 400.
+ *
+ * A number is not asked for on an employment visa — the paper form has no box
+ * for one — but an Emirates ID and a passport are nothing without theirs.
+ * LABOUR_CARD is the PRO's and never offered, so the enum stops at three.
+ */
+export const employeeDocumentSchema = z
+  .object({
+    kind: z.enum(HR_DOCUMENT_KINDS),
+    number: optionalText,
+    visaType: z.enum(VISA_TYPES).optional(),
+    visaTypeOther: optionalText,
+    issuingCountry: optionalText,
+    issuedAt: isoDate('Issue date'),
+    expiresAt: isoDate('Expiry date'),
+    remark: optionalText,
+  })
+  .superRefine((doc, ctx) => {
+    if (doc.kind !== 'VISA' && !doc.number?.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['number'],
+        message: `${doc.kind === 'EMIRATES_ID' ? 'Emirates ID' : 'Passport'} number is required`,
+      });
+    }
+
+    if (doc.kind === 'VISA' && !doc.visaType) {
+      ctx.addIssue({ code: 'custom', path: ['visaType'], message: 'Pick the type of visa' });
+    }
+
+    if (doc.visaType === 'OTHER' && !doc.visaTypeOther?.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['visaTypeOther'],
+        message: 'Describe the visa type',
+      });
+    }
+
+    if (doc.kind === 'PASSPORT' && !doc.issuingCountry?.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['issuingCountry'],
+        message: 'Issuing country is required',
+      });
+    }
+
+    if (doc.issuedAt && doc.expiresAt && doc.expiresAt <= doc.issuedAt) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['expiresAt'],
+        message: 'Expiry must be after the issue date',
+      });
+    }
+  });
+
 export const employeeSchema = z
   .object({
     // ── identity ──
-    employeeCode: required('Employee code'),
+    // employeeCode is issued by the server, never submitted.
+    fileNo: z.string().trim().optional(),
     name: required('Name'),
-    designation: required('Designation'),
+    tradeId: required('Designation'),
     department: required('Department'),
     reportingManager: required('Reporting manager'),
 
@@ -52,23 +111,9 @@ export const employeeSchema = z
     contractStart: isoDate('Contract start'),
     contractEnd: isoDate('Contract end'),
 
-    // ── visa ──
-    visaType: z.enum(VISA_TYPES),
-    visaTypeOther: optionalText,
-    visaIssueDate: isoDate('Visa issue date'),
-    visaExpiryDate: isoDate('Visa expiry date'),
-    visitVisaNumber: optionalText,
-    visitVisaIssueDate: optionalText,
-    visitVisaExpiryDate: optionalText,
-
     // ── documents ──
-    emiratesIdNumber: required('Emirates ID number'),
-    emiratesIdIssueDate: isoDate('Emirates ID issue date'),
-    emiratesIdExpiryDate: isoDate('Emirates ID expiry date'),
-    passportNumber: required('Passport number'),
-    passportCountry: required('Passport country'),
-    passportIssueDate: isoDate('Passport issue date'),
-    passportValidUntil: isoDate('Passport valid until'),
+    /** Visa, Emirates ID and passport, each with its own dates and history. */
+    documents: z.array(employeeDocumentSchema).min(1, 'Record at least one document'),
 
     // ── personal ──
     dateOfBirth: isoDate('Date of birth'),
@@ -97,10 +142,6 @@ export const employeeSchema = z
     /** The DTO requires the array; one usable contact is the point of it. */
     emergencyContacts: z.array(emergencyContactSchema).min(1, 'Add at least one emergency contact'),
   })
-  .refine((v) => v.visaType !== 'OTHER' || !!v.visaTypeOther?.trim(), {
-    path: ['visaTypeOther'],
-    message: 'Describe the visa type',
-  })
   .refine((v) => v.maritalStatus !== 'OTHER' || !!v.maritalStatusOther?.trim(), {
     path: ['maritalStatusOther'],
     message: 'Describe the marital status',
@@ -108,6 +149,12 @@ export const employeeSchema = z
   .refine((v) => v.drivingLicense !== 'OTHER' || !!v.drivingLicenseOther?.trim(), {
     path: ['drivingLicenseOther'],
     message: 'Describe the licence',
+  })
+  // A licence someone holds has an expiry that has to be tracked; one they do
+  // not hold has nothing to expire. So the date is required only for YES.
+  .refine((v) => v.drivingLicense !== 'YES' || !!v.drivingLicenseValidUntil?.trim(), {
+    path: ['drivingLicenseValidUntil'],
+    message: 'Enter the licence expiry date',
   })
   .refine((v) => !v.contractEnd || !v.contractStart || v.contractEnd >= v.contractStart, {
     path: ['contractEnd'],
@@ -117,15 +164,23 @@ export const employeeSchema = z
 export type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
 /**
- * On create the visa must still be valid — issuing a record against an already
+ * On create the visa must still be valid — opening a record against an already
  * expired document is a data-entry mistake. On edit it may be in the past:
- * existing records legitimately hold lapsed visas awaiting renewal, and
- * refusing to save one would block fixing a typo.
+ * existing records legitimately hold lapsed visas awaiting renewal, and a
+ * renewal is its own action rather than a correction of this form.
  */
-export const createEmployeeSchema = employeeSchema.refine(
-  (v) => !v.visaExpiryDate || v.visaExpiryDate >= today(),
-  { path: ['visaExpiryDate'], message: 'Visa expiry must be in the future' },
-);
+export const createEmployeeSchema = employeeSchema.superRefine((v, ctx) => {
+  const index = v.documents.findIndex((d) => d.kind === 'VISA');
+  const visa = index === -1 ? null : v.documents[index];
+
+  if (visa?.expiresAt && visa.expiresAt < today()) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['documents', index, 'expiresAt'],
+      message: 'Visa expiry must be in the future',
+    });
+  }
+});
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);

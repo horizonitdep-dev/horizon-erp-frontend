@@ -30,4 +30,28 @@ export const queryKeys = {
     /** An employee's departures, newest first — how the record page finds its row. */
     forEmployee: (employeeId: string) => ['departures', 'employee', employeeId] as const,
   },
+  /**
+   * One namespace for the whole module, invalidated wholesale after a move: a
+   * move changes the master list, the summary, the movement log, the project
+   * headcount and the daily report at once. Splitting it finer is how a stale
+   * number survives on one screen.
+   */
+  operations: {
+    all: ['operations'] as const,
+    master: (params: Record<string, unknown>) => ['operations', 'master', params] as const,
+    worker: (id: string) => ['operations', 'worker', id] as const,
+    summary: ['operations', 'summary'] as const,
+    movements: (params: Record<string, unknown>) => ['operations', 'movements', params] as const,
+    projects: (params: Record<string, unknown>) => ['operations', 'projects', params] as const,
+    project: (id: string) => ['operations', 'project', id] as const,
+    dailyReport: (date: string) => ['operations', 'daily-report', date] as const,
+    vehicles: ['operations', 'vehicles'] as const,
+    expectedArrivals: (params: Record<string, unknown>) =>
+      ['operations', 'expected-arrivals', params] as const,
+  },
+  /** Shared reference data — HR reads the same list for its designation field. */
+  trades: {
+    all: ['trades'] as const,
+    list: (category?: string) => ['trades', 'list', category ?? 'all'] as const,
+  },
 } as const;

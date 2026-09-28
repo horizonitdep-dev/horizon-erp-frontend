@@ -43,7 +43,7 @@ export function TopBar() {
           <div className="hirs-avatar">{initials(user?.fullName)}</div>
           <div>
             <b>{user?.fullName ?? '—'}</b>
-            <span>{user?.role ?? '—'}</span>
+            <span>{user?.jobTitle ?? '—'}</span>
           </div>
         </div>
 

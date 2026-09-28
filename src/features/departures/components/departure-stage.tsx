@@ -9,7 +9,10 @@ import { STAGE_LABELS, type ApprovalTick, type DepartureStage } from '../types';
 const STAGE_DOT: Record<DepartureStage, string> = {
   COMPLETED: 'good',
   AWAITING_APPROVAL: 'warn',
-  AWAITING_DEPARTURE: 'warn',
+  CLEARANCE_SUBMITTED: 'warn',
+  // Sent back: someone has to act on it.
+  CLEARANCE_REJECTED: 'bad',
+  AWAITING_CLEARANCE: 'warn',
   DRAFT: 'neutral',
   VOIDED: 'muted',
 };

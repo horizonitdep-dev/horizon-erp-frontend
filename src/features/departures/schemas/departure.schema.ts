@@ -70,8 +70,6 @@ export const clearanceSchema = z.object({
   driverName: text,
   driverSignedDate: isoDate,
   driverSignedTime: time,
-  reportingManagerName: text,
-  reportingManagerSigned: yesNo,
   remarks: text,
 });
 
@@ -146,8 +144,6 @@ export function toClearanceValues(d: Departure): ClearanceValues {
     driverName: str(d.driverName),
     driverSignedDate: day(d.driverSignedDate),
     driverSignedTime: str(d.driverSignedTime),
-    reportingManagerName: str(d.reportingManagerName),
-    reportingManagerSigned: yn(d.reportingManagerSigned),
     remarks: str(d.remarks),
   };
 }
@@ -166,8 +162,6 @@ export function toClearancePayload(v: ClearanceValues): ClearancePayload {
     driverName: nullable(v.driverName),
     driverSignedDate: nullable(v.driverSignedDate),
     driverSignedTime: nullable(v.driverSignedTime),
-    reportingManagerName: nullable(v.reportingManagerName),
-    reportingManagerSigned: bool(v.reportingManagerSigned),
     remarks: nullable(v.remarks),
   };
 }

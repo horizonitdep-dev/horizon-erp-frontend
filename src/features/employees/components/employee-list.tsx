@@ -7,6 +7,7 @@ import { routes } from '@/core/config/routes';
 import { apiMessage } from '@/core/api/unwrap';
 import { Button } from '@/components/ui/button';
 import { EmptyState, ErrorState, Skeleton, TableSkeleton } from '@/components/ui/states';
+import { Pagination } from '@/components/ui/pagination';
 import { ExportIcon, PlusIcon } from '@/components/ui/icons';
 import { EM_DASH, formatCount } from '@/lib/format';
 import { useEmployees, useEmployeeOptions, useEmployeeStats } from '../hooks/use-employees';
@@ -37,7 +38,7 @@ export function EmployeeList() {
       page,
       limit: PAGE_SIZE,
       ...(filters.search ? { search: filters.search } : {}),
-      ...(filters.designation ? { designation: filters.designation } : {}),
+      ...(filters.tradeId ? { tradeId: filters.tradeId } : {}),
       ...(filters.department ? { department: filters.department } : {}),
       ...(filters.nationality ? { nationality: filters.nationality } : {}),
       ...(filters.visaStatus ? { visaStatus: filters.visaStatus as VisaStatus } : {}),
@@ -156,12 +157,13 @@ export function EmployeeList() {
           </div>
         )}
 
-        {meta && meta.totalPages > 1 ? (
+        {meta ? (
           <Pagination
             page={meta.page}
             totalPages={meta.totalPages}
             total={meta.total}
             limit={meta.limit}
+            noun="employee"
             onPage={setPage}
           />
         ) : null}
@@ -192,70 +194,6 @@ function StatTile({
   );
 }
 
-export function Pagination({
-  page,
-  totalPages,
-  total,
-  limit,
-  onPage,
-}: {
-  page: number;
-  totalPages: number;
-  total: number;
-  limit: number;
-  onPage: (page: number) => void;
-}) {
-  const from = (page - 1) * limit + 1;
-  const to = Math.min(page * limit, total);
-
-  return (
-    <nav className="pagination" aria-label="Pagination">
-      <span>
-        {formatCount(from)}–{formatCount(to)} of {formatCount(total)}
-      </span>
-      <div className="pagination-pages">
-        <button
-          type="button"
-          className="page-btn"
-          onClick={() => onPage(page - 1)}
-          disabled={page <= 1}
-          aria-label="Previous page"
-        >
-          ‹
-        </button>
-        {pageWindow(page, totalPages).map((p) => (
-          <button
-            key={p}
-            type="button"
-            className="page-btn"
-            data-active={p === page}
-            aria-current={p === page ? 'page' : undefined}
-            onClick={() => onPage(p)}
-          >
-            {p}
-          </button>
-        ))}
-        <button
-          type="button"
-          className="page-btn"
-          onClick={() => onPage(page + 1)}
-          disabled={page >= totalPages}
-          aria-label="Next page"
-        >
-          ›
-        </button>
-      </div>
-    </nav>
-  );
-}
-
-/** At most five page buttons, centred on the current page. */
-function pageWindow(page: number, totalPages: number): number[] {
-  const span = Math.min(5, totalPages);
-  let start = Math.max(1, page - Math.floor(span / 2));
-  if (start + span - 1 > totalPages) start = totalPages - span + 1;
-  return Array.from({ length: span }, (_, i) => start + i);
-}
 
 function hasAnyFilter(filters: EmployeeFilterValues): boolean {
   return Object.values(filters).some((value) => value !== '');

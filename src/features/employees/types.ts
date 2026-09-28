@@ -5,9 +5,11 @@
  * This replaced an earlier guess based on the HR mockup. The real model differs
  * in ways that matter:
  *   - one `name`, not firstName / lastName
- *   - `designation`, not `trade`
+ *   - the trade is a relation (`trade`), picked from shared reference data,
+ *     replacing what used to be a free-text `designation`
  *   - `department`, not `camp`
- *   - `visaExpiryDate`, not `visaExpiry`
+ *   - visa, Emirates ID and passport are dated DOCUMENTS with history, not
+ *     flat columns — a renewal adds a row rather than overwriting one
  *   - no `deploymentStatus` and no `deployedTo` at all. Instead the server
  *     stores `employmentStatus` (ACTIVE | CANCELLED) and derives `visaStatus`.
  */
@@ -30,12 +32,17 @@ export type FamilyRole = (typeof FAMILY_ROLES)[number];
 export const EMPLOYMENT_STATUSES = ['ACTIVE', 'CANCELLED'] as const;
 export type EmploymentStatus = (typeof EMPLOYMENT_STATUSES)[number];
 
-/** Derived by the server from visaExpiryDate — not a stored field. */
+/** Derived by the server from the current documents — not a stored field. */
 export const VISA_STATUSES = ['VALID', 'RENEWAL_DUE', 'EXPIRING', 'EXPIRED'] as const;
 export type VisaStatus = (typeof VISA_STATUSES)[number];
 
 /** Columns the API will sort by. Anything else is rejected. */
-export const SORTABLE_FIELDS = ['name', 'employeeCode', 'visaExpiryDate', 'joiningDate'] as const;
+/**
+ * Visa expiry is gone from here: it lives on the current VISA document now, and
+ * ordering by a to-many relation's column is not something the API can do. The
+ * visa-status FILTER still works, which is what the column was mostly used for.
+ */
+export const SORTABLE_FIELDS = ['name', 'employeeCode', 'joiningDate'] as const;
 export type SortableField = (typeof SORTABLE_FIELDS)[number];
 
 export const VISA_STATUS_LABELS: Record<VisaStatus, string> = {
@@ -74,30 +81,67 @@ export interface EmergencyContact {
   contactNo: string;
 }
 
+/** Which dated document this is. The labour card belongs to the PR module. */
+export const DOCUMENT_KINDS = ['VISA', 'EMIRATES_ID', 'PASSPORT', 'LABOUR_CARD'] as const;
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
+
+/** The three HR records. A labour card is the PRO’s, so HR is never asked for one. */
+export const HR_DOCUMENT_KINDS = ['VISA', 'EMIRATES_ID', 'PASSPORT'] as const;
+
+export const DOCUMENT_LABELS: Record<DocumentKind, string> = {
+  VISA: 'Visa',
+  EMIRATES_ID: 'Emirates ID',
+  PASSPORT: 'Passport',
+  LABOUR_CARD: 'Labour card',
+};
+
+/**
+ * One issue of one document. A renewal is a NEW row — it never overwrites the
+ * one it replaced, which is what the flat columns used to do.
+ */
+export interface EmployeeDocumentPayload {
+  kind: DocumentKind;
+  /** Required for an Emirates ID or passport; a visa need not carry one. */
+  number?: string | null;
+  issuedAt: string;
+  expiresAt: string;
+  /** kind = VISA only. */
+  visaType?: VisaType | null;
+  visaTypeOther?: string | null;
+  /** kind = PASSPORT only. */
+  issuingCountry?: string | null;
+  remark?: string | null;
+}
+
+export interface EmployeeDocument extends EmployeeDocumentPayload {
+  id: string;
+  /** Null means this is the one he holds now. Set when a renewal replaces it. */
+  supersededAt: string | null;
+  createdAt: string;
+  createdBy?: { id: string; fullName: string } | null;
+}
+
+/** A kind with the document he holds and the renewals it replaced, newest first. */
+export interface DocumentGroup {
+  kind: DocumentKind;
+  label: string;
+  current: EmployeeDocument | null;
+  history: EmployeeDocument[];
+}
+
 /** The create payload, field for field with CreateEmployeeDto. */
 export interface EmployeePayload {
-  employeeCode: string;
+  /** Optional: the labour file number only exists once the visa is processed. */
+  fileNo?: string;
   name: string;
-  designation: string;
+  tradeId: string;
   department: string;
   reportingManager: string;
   joiningDate: string;
   contractStart: string;
   contractEnd: string;
-  visaType: VisaType;
-  visaTypeOther?: string | null;
-  visaIssueDate: string;
-  visaExpiryDate: string;
-  visitVisaNumber?: string | null;
-  visitVisaIssueDate?: string | null;
-  visitVisaExpiryDate?: string | null;
-  emiratesIdNumber: string;
-  emiratesIdIssueDate: string;
-  emiratesIdExpiryDate: string;
-  passportNumber: string;
-  passportCountry: string;
-  passportIssueDate: string;
-  passportValidUntil: string;
+  /** At least a passport and a visa, since the paper form asks for both. */
+  documents: EmployeeDocumentPayload[];
   dateOfBirth: string;
   nationality: string;
   religion: string;
@@ -125,6 +169,14 @@ export interface EmployeePayload {
  */
 export interface Employee extends EmployeePayload {
   id: string;
+  /** Issued by the server on save — returned, never submitted. */
+  employeeCode: string;
+  /** The trade joined from shared reference data; `tradeId` is what is written. */
+  trade: { id: string; name: string; category?: string } | null;
+  /** Current documents on the list; every one, plus history, on the record. */
+  documents: EmployeeDocument[];
+  /** Grouped for display — only on GET /hr/employees/:id. */
+  documentGroups?: DocumentGroup[];
   employmentStatus: EmploymentStatus;
   visaStatus?: VisaStatus;
   cancelledAt?: string | null;
@@ -139,7 +191,7 @@ export interface EmployeeListParams {
   search?: string;
   sortBy?: SortableField;
   sortOrder?: 'asc' | 'desc';
-  designation?: string;
+  tradeId?: string;
   nationality?: string;
   department?: string;
   /** Defaults to ACTIVE server-side. */
@@ -160,8 +212,8 @@ export interface EmployeeStats {
 }
 
 /** GET /hr/employees/options — the lookup lists behind the filters and form. */
+/** Designations are NOT here — they come from GET /operations/trades. */
 export interface EmployeeOptions {
-  designations: string[];
   departments: string[];
   nationalities: string[];
   countries: string[];
