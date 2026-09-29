@@ -46,7 +46,8 @@ export function useUpdateEmployee(id: string) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  return useMutation<Employee, unknown, Partial<EmployeePayload>>({
+  // PATCH does not take documents — a renewal is useAddDocument below.
+  return useMutation<Employee, unknown, Partial<Omit<EmployeePayload, 'documents'>>>({
     mutationFn: (payload) => updateEmployee(id, payload),
     onSuccess: (employee) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });

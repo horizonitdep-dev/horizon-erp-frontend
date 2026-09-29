@@ -172,6 +172,55 @@ export function InboxIcon({ size = 20, className }: IconProps) {
   );
 }
 
+export function InfoIcon({ size = 14, className }: IconProps) {
+  return (
+    <Icon size={size} strokeWidth={2} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 16v-4M12 8v.01" />
+    </Icon>
+  );
+}
+
+/* ── Project types and accommodation — from hirs-ops-add-project.html ──── */
+
+/** A client site; also "client provided" accommodation. */
+export function SiteIcon({ size = 17, className }: IconProps) {
+  return (
+    <Icon size={size} strokeWidth={1.7} className={className}>
+      <path d="M3 20V9.5L12 3l9 6.5V20" />
+      <path d="M9 20v-6h6v6" />
+    </Icon>
+  );
+}
+
+export function MarkupIcon({ size = 17, className }: IconProps) {
+  return (
+    <Icon size={size} strokeWidth={1.7} className={className}>
+      <rect x="2.5" y="7" width="19" height="13" rx="2.5" />
+      <path d="M8.5 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" />
+      <path d="M2.5 12h19" />
+    </Icon>
+  );
+}
+
+export function InternalIcon({ size = 17, className }: IconProps) {
+  return (
+    <Icon size={size} strokeWidth={1.7} className={className}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M8 4v16M3 10h5" />
+    </Icon>
+  );
+}
+
+export function CampIcon({ size = 16, className }: IconProps) {
+  return (
+    <Icon size={size} strokeWidth={1.7} className={className}>
+      <path d="M4 21V10l8-6 8 6v11" />
+      <path d="M4 14h16M9 21v-5h6v5" />
+    </Icon>
+  );
+}
+
 /* ── Department icons — 23px, stroke 1.6, paths transcribed from §10 ────── */
 
 export function OverviewIcon({ size = 23, className }: IconProps) {

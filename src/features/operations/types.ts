@@ -1,3 +1,5 @@
+import type { EmployeeDocument } from '@/features/employees/types';
+
 /**
  * The Operations module's own types. Nothing here redeclares a subset inline.
  *
@@ -45,9 +47,12 @@ export const EMPLOYEE_GROUPS = [
 
 export type EmployeeGroup = (typeof EMPLOYEE_GROUPS)[number];
 
-export type ProjectType = 'SITE' | 'MARKUP' | 'INTERNAL';
-export type ManagedBy = 'BUSINESS' | 'OPERATIONS' | 'JOINT';
-export type Accommodation = 'CLIENT' | 'HORIZON';
+export const PROJECT_TYPES = ['SITE', 'MARKUP', 'INTERNAL'] as const;
+export type ProjectType = (typeof PROJECT_TYPES)[number];
+export const MANAGED_BY = ['BUSINESS', 'OPERATIONS', 'JOINT'] as const;
+export type ManagedBy = (typeof MANAGED_BY)[number];
+export const ACCOMMODATIONS = ['CLIENT', 'HORIZON'] as const;
+export type Accommodation = (typeof ACCOMMODATIONS)[number];
 export type TradeCategory = 'SITE' | 'MARKUP' | 'OFFICE';
 
 export interface Trade {
@@ -99,8 +104,8 @@ export interface Worker {
   /** The labour file number, null until the visa has been processed. */
   fileNo: string | null;
   name: string;
-  passportNumber: string;
-  visaType: string;
+  /** Current documents only — the passport and visa are read out of these. */
+  documents: EmployeeDocument[];
   nationality: string;
   employmentStatus: 'ACTIVE' | 'CANCELLED';
   trade: { id: string; name: string; category: TradeCategory } | null;

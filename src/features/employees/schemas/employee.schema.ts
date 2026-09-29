@@ -112,8 +112,12 @@ export const employeeSchema = z
     contractEnd: isoDate('Contract end'),
 
     // ── documents ──
-    /** Visa, Emirates ID and passport, each with its own dates and history. */
-    documents: z.array(employeeDocumentSchema).min(1, 'Record at least one document'),
+    /**
+     * Visa, Emirates ID and passport, each with its own dates and history.
+     * Entered on create only — on edit the array is empty and never sent, since
+     * PATCH does not take documents and a renewal is its own POST.
+     */
+    documents: z.array(employeeDocumentSchema),
 
     // ── personal ──
     dateOfBirth: isoDate('Date of birth'),
@@ -170,6 +174,10 @@ export type EmployeeFormValues = z.infer<typeof employeeSchema>;
  * renewal is its own action rather than a correction of this form.
  */
 export const createEmployeeSchema = employeeSchema.superRefine((v, ctx) => {
+  if (v.documents.length === 0) {
+    ctx.addIssue({ code: 'custom', path: ['documents'], message: 'Record at least one document' });
+  }
+
   const index = v.documents.findIndex((d) => d.kind === 'VISA');
   const visa = index === -1 ? null : v.documents[index];
 

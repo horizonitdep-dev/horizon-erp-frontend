@@ -1,4 +1,4 @@
-import type { EmploymentStatus } from '@/features/employees/types';
+import type { EmployeeDocument, EmploymentStatus } from '@/features/employees/types';
 
 /**
  * The Employee Departure Form — mirrors the live API (`/hr/departures`).
@@ -77,8 +77,8 @@ export interface DepartureEmployee {
   joiningDate: string;
   /** Joined from shared reference data; "Designation" on the paper form. */
   trade: { id: string; name: string } | null;
-  emiratesIdNumber: string;
-  visaExpiryDate: string;
+  /** Current documents only — read the Emirates ID and visa out of these. */
+  documents: EmployeeDocument[];
   employmentStatus: EmploymentStatus;
 }
 

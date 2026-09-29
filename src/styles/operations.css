@@ -425,3 +425,89 @@ fieldset.op-field { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
 }
 .op-inline-field input:focus { border-color: var(--o); box-shadow: var(--ring); }
 .op-inline-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
+
+/* ══════════ ADD / EDIT PROJECT ══════════
+   design/hirs-ops-add-project.html. Fields, panels, rail and action bar are
+   the employee form's (`.ef-*`, `.actionbar`); only what that form lacks is here. */
+
+.op-pf-cols { grid-template-columns: 1fr 320px; }
+
+/* Type cards — real radios underneath, hidden, like `.ef-seg`. */
+.op-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.op-type {
+  position: relative; display: block; cursor: pointer;
+  border: 1px solid var(--line); border-radius: var(--r-2xl); background: var(--card); padding: 16px;
+  transition: border-color .25s, background .25s;
+}
+.op-type:hover { border-color: var(--line-strong); }
+.op-type input { position: absolute; opacity: 0; pointer-events: none; }
+.op-type:has(input:checked) { border-color: var(--o-line); background: var(--tint); }
+.op-type:has(input:focus-visible) { border-color: var(--o); box-shadow: var(--ring); }
+.op-type-ic {
+  width: 34px; height: 34px; border-radius: var(--r-lg); margin-bottom: 12px;
+  display: grid; place-items: center; background: var(--count-bg); color: var(--ink-3); transition: .25s;
+}
+.op-type:has(input:checked) .op-type-ic { background: var(--grad); color: #fff; }
+.op-type b { display: block; font: 600 14px var(--font-inter); color: var(--ink); }
+.op-type:has(input:checked) b { color: var(--o); }
+.op-type-note { display: block; margin-top: 4px; font-size: 12px; color: var(--ink-3); line-height: 1.45; }
+
+/* Pills that carry an icon, and the quiet "Clear" beside them. */
+.ef-seg label svg { width: 16px; height: 16px; flex: none; }
+.op-pf-clear { background: none; border: 0; padding: 0 4px; font: 500 12.5px var(--font-inter); color: var(--ink-3); cursor: pointer; }
+.op-pf-clear:hover { color: var(--o); }
+
+/* A block that does not apply to the chosen type — greyed, with its reason. */
+.op-dis { opacity: .42; filter: saturate(.4); }
+.op-dis label { cursor: not-allowed; }
+.op-disnote { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+.op-disnote svg { flex: none; margin-top: 2px; }
+.op-disnote--grid { grid-column: 2; margin-top: -10px; }
+.op-pf-accnote { margin-top: 10px; }
+.op-pf-acc { margin-bottom: 20px; }
+.op-pf-accnote + .op-switchrow { margin-top: 20px; }
+
+/* Switch row */
+.op-switchrow {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px;
+  border: 1px solid var(--line); border-radius: var(--r-2xl); background: var(--surface-2);
+}
+.op-switchrow-txt { flex: 1; }
+.op-switchrow-txt b { display: block; font: 500 13.5px var(--font-inter); }
+.op-switchrow-txt span { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-3); line-height: 1.45; }
+.op-switch {
+  position: relative; flex: none; width: 42px; height: 24px; margin-top: 2px;
+  border: 0; border-radius: var(--r-pill); background: var(--line-strong); cursor: pointer;
+  transition: background .25s;
+}
+.op-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+  transition: transform .25s var(--spring);
+}
+.op-switch[aria-checked='true'] { background: var(--grad); }
+.op-switch[aria-checked='true']::after { transform: translateX(18px); }
+.op-switch:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* Rail preview */
+.op-pf-prev {
+  display: flex; align-items: center; gap: 12px;
+  padding-bottom: 14px; margin-bottom: 4px; border-bottom: 1px solid var(--line);
+}
+.op-pf-prev-ic {
+  width: 40px; height: 40px; flex: none; border-radius: var(--r-2xl);
+  display: grid; place-items: center; background: var(--tint); color: var(--o);
+}
+.op-pf-prev b { display: block; font: 500 14.5px var(--font-inter); overflow-wrap: anywhere; }
+.op-pf-prev div > span { display: block; margin-top: 3px; font: 400 12px var(--font-mono); color: var(--ink-3); }
+.op-pf-badge {
+  display: inline-flex; align-items: center; padding: 4px 9px; border-radius: var(--r-pill);
+  font: 500 10.5px var(--font-inter); letter-spacing: .09em; text-transform: uppercase;
+  background: var(--tint); color: var(--o);
+}
+
+@media (max-width: 1100px) { .op-pf-cols { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .op-types { grid-template-columns: 1fr; }
+  .op-disnote--grid { grid-column: 1; margin-top: 0; }
+}

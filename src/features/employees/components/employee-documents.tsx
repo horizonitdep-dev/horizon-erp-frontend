@@ -14,7 +14,13 @@ import { AlertIcon, PlusIcon } from '@/components/ui/icons';
 import { EM_DASH, formatDate } from '@/lib/format';
 import { useAddDocument } from '../hooks/use-employee-mutations';
 import { documentLabel, historyOfKind, isEmployedVisa, visaLabel } from '../lib/documents';
-import { HR_DOCUMENT_KINDS, VISA_TYPES, type DocumentKind, type Employee } from '../types';
+import {
+  HR_DOCUMENT_KINDS,
+  VISA_TYPES,
+  type DocumentKind,
+  type Employee,
+  type VisaType,
+} from '../types';
 // Inferred from the zod schema, so it lives with the schema — importing it
 // from types.ts would make types and schema import each other.
 import type { EmployeeFormValues } from '../schemas/employee.schema';
@@ -194,7 +200,7 @@ export function DocumentsFieldArray({
  * is `POST /hr/employees/:id/documents` and adds a row.
  */
 export function DocumentsPanel({ employee }: { employee: Employee }) {
-  const [renewing, setRenewing] = useState<DocumentKind | null>(null);
+  const [renewing, setRenewing] = useState<{ kind: DocumentKind; first: boolean } | null>(null);
 
   const groups =
     employee.documentGroups ??
@@ -204,6 +210,10 @@ export function DocumentsPanel({ employee }: { employee: Employee }) {
       current: employee.documents?.find((d) => d.kind === kind && !d.supersededAt) ?? null,
       history: historyOfKind(employee.documents, kind),
     })).filter((group) => group.current || group.history.length > 0);
+
+  // A kind he has never held — typically the Emirates ID a visit-visa candidate
+  // is entered without — is recorded from here once it arrives.
+  const missing = HR_DOCUMENT_KINDS.filter((kind) => !groups.some((g) => g.kind === kind));
 
   return (
     <>
@@ -249,9 +259,24 @@ export function DocumentsPanel({ employee }: { employee: Employee }) {
               <button
                 type="button"
                 className="ef-doc-renew"
-                onClick={() => setRenewing(group.kind)}
+                onClick={() => setRenewing({ kind: group.kind, first: false })}
               >
                 Record a renewal
+              </button>
+            </dd>
+          </div>
+        ))}
+        {missing.map((kind) => (
+          <div key={kind} className="ef-doc-row">
+            <dt>{documentLabel(kind)}</dt>
+            <dd>
+              <span className="cell-muted">None on file</span>
+              <button
+                type="button"
+                className="ef-doc-renew"
+                onClick={() => setRenewing({ kind, first: true })}
+              >
+                Record one
               </button>
             </dd>
           </div>
@@ -266,7 +291,8 @@ export function DocumentsPanel({ employee }: { employee: Employee }) {
       {renewing ? (
         <RenewalDialog
           employeeId={employee.id}
-          kind={renewing}
+          kind={renewing.kind}
+          first={renewing.first}
           onClose={() => setRenewing(null)}
         />
       ) : null}
@@ -278,22 +304,35 @@ export function DocumentsPanel({ employee }: { employee: Employee }) {
 function RenewalDialog({
   employeeId,
   kind,
+  first,
   onClose,
 }: {
   employeeId: string;
   kind: DocumentKind;
+  /** Nothing of this kind on file yet, so there is nothing to renew. */
+  first: boolean;
   onClose: () => void;
 }) {
   const add = useAddDocument(employeeId);
 
   const [number, setNumber] = useState('');
-  const [visaType, setVisaType] = useState<string>('EMPLOYMENT');
+  const [visaType, setVisaType] = useState<VisaType>('EMPLOYMENT');
+  const [visaTypeOther, setVisaTypeOther] = useState('');
   const [issuingCountry, setIssuingCountry] = useState('');
   const [issuedAt, setIssuedAt] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
 
   const needsNumber = kind !== 'VISA';
-  const ready = issuedAt && expiresAt && (!needsNumber || number.trim());
+  const needsOther = kind === 'VISA' && visaType === 'OTHER';
+  // Same rules the server enforces, so the button stays off rather than 400ing.
+  const datesOrdered = !issuedAt || !expiresAt || expiresAt > issuedAt;
+  const ready =
+    issuedAt &&
+    expiresAt &&
+    datesOrdered &&
+    (!needsNumber || number.trim()) &&
+    (!needsOther || visaTypeOther.trim()) &&
+    (kind !== 'PASSPORT' || issuingCountry.trim());
 
   return (
     <div className="op-dialog-backdrop" role="presentation" onClick={onClose}>
@@ -305,13 +344,17 @@ function RenewalDialog({
         onClick={(event) => event.stopPropagation()}
       >
         <header className="op-dialog-head">
-          <h2 id="ef-renew-title">Renew the {documentLabel(kind).toLowerCase()}</h2>
-          <p className="note">
-            The one on file is kept as history. Nothing is overwritten.
-            {kind === 'EMIRATES_ID'
-              ? ' An Emirates ID keeps its number across renewals — only the expiry moves.'
-              : ''}
-          </p>
+          <h2 id="ef-renew-title">
+            {first ? 'Record' : 'Renew'} the {documentLabel(kind).toLowerCase()}
+          </h2>
+          {first ? null : (
+            <p className="note">
+              The one on file is kept as history. Nothing is overwritten.
+              {kind === 'EMIRATES_ID'
+                ? ' An Emirates ID keeps its number across renewals — only the expiry moves.'
+                : ''}
+            </p>
+          )}
         </header>
 
         <div className="op-dialog-body">
@@ -321,7 +364,7 @@ function RenewalDialog({
               <select
                 id="ef-renew-visa"
                 value={visaType}
-                onChange={(event) => setVisaType(event.target.value)}
+                onChange={(event) => setVisaType(event.target.value as VisaType)}
               >
                 {VISA_TYPES.map((option) => (
                   <option key={option} value={option}>
@@ -342,6 +385,17 @@ function RenewalDialog({
               />
             </label>
           )}
+
+          {needsOther ? (
+            <label className="op-field" htmlFor="ef-renew-visa-other">
+              <span className="op-label">Describe the visa</span>
+              <input
+                id="ef-renew-visa-other"
+                value={visaTypeOther}
+                onChange={(event) => setVisaTypeOther(event.target.value)}
+              />
+            </label>
+          ) : null}
 
           {kind === 'PASSPORT' ? (
             <label className="op-field" htmlFor="ef-renew-country">
@@ -376,6 +430,13 @@ function RenewalDialog({
             </label>
           </div>
 
+          {!datesOrdered ? (
+            <p className="op-error" role="alert">
+              <AlertIcon size={15} />
+              <span>Expiry must be after the issue date.</span>
+            </p>
+          ) : null}
+
           {add.isError ? (
             <p className="op-error" role="alert">
               <AlertIcon size={15} />
@@ -396,7 +457,8 @@ function RenewalDialog({
                   {
                     kind,
                     number: needsNumber ? number.trim() : undefined,
-                    visaType: kind === 'VISA' ? (visaType as never) : undefined,
+                    visaType: kind === 'VISA' ? visaType : undefined,
+                    visaTypeOther: needsOther ? visaTypeOther.trim() : undefined,
                     issuingCountry: kind === 'PASSPORT' ? issuingCountry.trim() : undefined,
                     issuedAt,
                     expiresAt,
@@ -405,7 +467,7 @@ function RenewalDialog({
                 )
               }
             >
-              {add.isPending ? 'Recording…' : 'Record renewal'}
+              {add.isPending ? 'Recording…' : first ? 'Record' : 'Record renewal'}
             </Button>
           </div>
         </footer>
