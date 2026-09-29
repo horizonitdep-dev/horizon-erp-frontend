@@ -21,7 +21,9 @@ export const routes = {
     worker: (id: string) => `/operations/workers/${id}`,
     movements: '/operations/movements',
     projects: '/operations/projects',
+    newProject: '/operations/projects/new',
     project: (id: string) => `/operations/projects/${id}`,
+    editProject: (id: string) => `/operations/projects/${id}/edit`,
     dailyReport: '/operations/daily-report',
   },
 } as const;

@@ -13,14 +13,12 @@ import { useSession } from '@/features/auth/hooks/use-session';
 import { useProjects } from '../hooks/use-operations';
 import { MANAGED_BY_LABELS, PROJECT_TYPE_LABELS } from '../lib/groups';
 import type { ManagedBy, ProjectType } from '../types';
-import { ProjectForm } from './project-form';
 
 /** Ongoing projects, with live headcount — the FOR OPERATION summary. */
 export function ProjectList() {
   const [type, setType] = useState<ProjectType | ''>('');
   const [managedBy, setManagedBy] = useState<ManagedBy | ''>('');
   const [activeOnly, setActiveOnly] = useState(true);
-  const [creating, setCreating] = useState(false);
 
   const { user } = useSession();
   const canWrite = hasAnyAccess(user, ACCESS_ANY.operationsProjectWrite);
@@ -45,7 +43,9 @@ export function ProjectList() {
         </div>
         {canWrite ? (
           <div className="head-actions">
-            <Button onClick={() => setCreating(true)}>Add project</Button>
+            <Link href={routes.operations.newProject} className="btn-primary">
+              Add project
+            </Link>
           </div>
         ) : null}
       </div>
@@ -161,8 +161,6 @@ export function ProjectList() {
           </div>
         )}
       </section>
-
-      {creating ? <ProjectForm onClose={() => setCreating(false)} /> : null}
     </>
   );
 }

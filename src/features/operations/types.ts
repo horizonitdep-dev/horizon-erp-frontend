@@ -47,9 +47,12 @@ export const EMPLOYEE_GROUPS = [
 
 export type EmployeeGroup = (typeof EMPLOYEE_GROUPS)[number];
 
-export type ProjectType = 'SITE' | 'MARKUP' | 'INTERNAL';
-export type ManagedBy = 'BUSINESS' | 'OPERATIONS' | 'JOINT';
-export type Accommodation = 'CLIENT' | 'HORIZON';
+export const PROJECT_TYPES = ['SITE', 'MARKUP', 'INTERNAL'] as const;
+export type ProjectType = (typeof PROJECT_TYPES)[number];
+export const MANAGED_BY = ['BUSINESS', 'OPERATIONS', 'JOINT'] as const;
+export type ManagedBy = (typeof MANAGED_BY)[number];
+export const ACCOMMODATIONS = ['CLIENT', 'HORIZON'] as const;
+export type Accommodation = (typeof ACCOMMODATIONS)[number];
 export type TradeCategory = 'SITE' | 'MARKUP' | 'OFFICE';
 
 export interface Trade {

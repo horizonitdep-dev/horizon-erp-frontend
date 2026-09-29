@@ -15,12 +15,10 @@ import { useSession } from '@/features/auth/hooks/use-session';
 import { useFinishProject, useProject } from '../hooks/use-operations';
 import { today } from '../lib/format';
 import { MANAGED_BY_LABELS, PROJECT_TYPE_LABELS, workerIdentifier } from '../lib/groups';
-import { ProjectForm } from './project-form';
 
 export function ProjectDetail({ projectId }: { projectId: string }) {
   const query = useProject(projectId);
   const finish = useFinishProject(projectId);
-  const [editing, setEditing] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [finishDate, setFinishDate] = useState(today());
 
@@ -77,9 +75,9 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         </div>
         <div className="head-actions">
           {canWrite ? (
-            <Button variant="ghost" onClick={() => setEditing(true)}>
+            <Link href={routes.operations.editProject(project.id)} className="btn-ghost">
               Edit
-            </Button>
+            </Link>
           ) : null}
           {canFinish && !project.finishedAt ? (
             <Button variant="ghost" onClick={() => setFinishing(true)}>
@@ -150,8 +148,6 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           </div>
         )}
       </section>
-
-      {editing ? <ProjectForm project={project} onClose={() => setEditing(false)} /> : null}
 
       <ConfirmDialog
         open={finishing}
